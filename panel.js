@@ -1,10 +1,13 @@
 (function initRequestFormatterPanel() {
   const MAX_ENTRIES = 500;
+  const LARGE_PAYLOAD_CHAR_LIMIT = 100000;
+  const PAYLOAD_PREVIEW_CHAR_LIMIT = 20000;
   const state = {
     entries: [],
     selectedId: null,
     filterText: "",
-    captureEnabled: true
+    captureEnabled: true,
+    activeTab: "all"
   };
 
   const dom = {
@@ -53,22 +56,56 @@
       responseEncoding: "",
       responseLoadState: "loading",
       timings: har.timings || {},
-      queryString: har.request?.queryString || []
+      queryString: har.request?.queryString || [],
+      formattedPreviewCache: {},
+      formattedCopyCache: {}
     };
 
-    entry.formatted = formatEntry(entry);
     return entry;
   }
 
-  function formatEntry(entry) {
-    return {
-      query: formatQuery(entry.url, entry.queryString),
-      requestHeaders: formatHeaders(entry.requestHeaders),
-      requestBody: formatRequestBody(entry.requestPostData),
-      responseHeaders: formatHeaders(entry.responseHeaders),
-      responseBody: formatResponseBody(entry),
-      timing: formatTiming(entry)
-    };
+  function getFormattedValue(entry, key, options) {
+    const mode = options?.forCopy ? "formattedCopyCache" : "formattedPreviewCache";
+
+    if (entry[mode][key] !== undefined) {
+      return entry[mode][key];
+    }
+
+    let value = "";
+
+    switch (key) {
+      case "query":
+        value = formatQuery(entry.url, entry.queryString);
+        break;
+      case "requestHeaders":
+        value = formatHeaders(entry.requestHeaders);
+        break;
+      case "requestBody":
+        value = formatRequestBody(entry.requestPostData, options);
+        break;
+      case "responseHeaders":
+        value = formatHeaders(entry.responseHeaders);
+        break;
+      case "responseBody":
+        value = formatResponseBody(entry, options);
+        break;
+      case "timing":
+        value = formatTiming(entry);
+        break;
+      default:
+        value = "";
+        break;
+    }
+
+    entry[mode][key] = value;
+    return value;
+  }
+
+  function clearFormattedCache(entry, keys) {
+    keys.forEach(function clearKey(key) {
+      delete entry.formattedPreviewCache[key];
+      delete entry.formattedCopyCache[key];
+    });
   }
 
   function formatQuery(url, queryString) {
@@ -106,7 +143,7 @@
     })), null, 2);
   }
 
-  function formatRequestBody(postData) {
+  function formatRequestBody(postData, options) {
     if (!postData) {
       return "No request body";
     }
@@ -121,10 +158,10 @@
       return "No request body";
     }
 
-    return formatPayload(postData.text, postData.mimeType);
+    return formatPayload(postData.text, postData.mimeType, options);
   }
 
-  function formatResponseBody(entry) {
+  function formatResponseBody(entry, options) {
     if (entry.responseLoadState === "loading") {
       return "Loading response content...";
     }
@@ -146,15 +183,25 @@
       ].join("\n");
     }
 
-    return formatPayload(entry.responseContent, entry.mimeType);
+    return formatPayload(entry.responseContent, entry.mimeType, options);
   }
 
-  function formatPayload(text, mimeType) {
+  function formatPayload(text, mimeType, options) {
     const source = String(text || "").trim();
     const type = String(mimeType || "").toLowerCase();
+    const previewMode = !options?.forCopy;
 
     if (!source) {
       return "Empty body";
+    }
+
+    if (previewMode && source.length > LARGE_PAYLOAD_CHAR_LIMIT) {
+      return [
+        `[Preview only] Payload is too large to fully format in the panel (${source.length.toLocaleString()} chars).`,
+        `Only the first ${PAYLOAD_PREVIEW_CHAR_LIMIT.toLocaleString()} chars are shown to keep the UI responsive.`,
+        "",
+        source.slice(0, PAYLOAD_PREVIEW_CHAR_LIMIT)
+      ].join("\n");
     }
 
     if (looksLikeJson(type, source)) {
@@ -244,7 +291,11 @@
       state.selectedId = entry.id;
     }
 
-    render();
+    renderList();
+
+    if (state.selectedId === entry.id) {
+      renderDetail();
+    }
   }
 
   function updateEntryContent(id, content, encoding, isUnavailable) {
@@ -259,8 +310,11 @@
     entry.responseContent = content || "";
     entry.responseEncoding = encoding || "";
     entry.responseLoadState = isUnavailable ? "unavailable" : "loaded";
-    entry.formatted = formatEntry(entry);
-    render();
+    clearFormattedCache(entry, ["responseBody"]);
+
+    if (state.selectedId === entry.id) {
+      renderDetail();
+    }
   }
 
   function getSelectedEntry() {
@@ -296,27 +350,18 @@
 
   function renderList() {
     const entries = getFilteredEntries();
-    dom.requestList.replaceChildren();
 
     if (entries.length === 0) {
       const empty = document.createElement("div");
       empty.className = "request-formatter-empty";
       empty.innerHTML = "<p>暂无匹配请求</p>";
-      dom.requestList.append(empty);
+      dom.requestList.replaceChildren(empty);
       return;
     }
 
-    entries.forEach(function renderEntry(entry) {
-      const item = document.createElement("button");
-      item.type = "button";
-      item.className = "request-formatter-item";
-      item.dataset.id = entry.id;
-
-      if (entry.id === state.selectedId) {
-        item.classList.add("is-active");
-      }
-
-      item.innerHTML = [
+    dom.requestList.innerHTML = entries.map(function renderEntry(entry) {
+      return [
+        `<button type="button" class="request-formatter-item${entry.id === state.selectedId ? " is-active" : ""}" data-id="${escapeHtml(entry.id)}">`,
         '<div class="request-formatter-item-main">',
         `<span class="request-formatter-item-method">${escapeHtml(entry.method)}</span>`,
         `<span class="request-formatter-item-url">${escapeHtml(shortenUrl(entry.url))}</span>`,
@@ -324,17 +369,10 @@
         '<div class="request-formatter-item-sub">',
         `<span>${escapeHtml(formatStatus(entry))}</span>`,
         `<span>${escapeHtml(formatDuration(entry.duration))}</span>`,
-        "</div>"
+        "</div>",
+        "</button>"
       ].join("");
-
-      item.addEventListener("click", function selectEntry() {
-        state.selectedId = entry.id;
-        render();
-        dom.detailContainer?.scrollTo({ top: 0, behavior: "auto" });
-      });
-
-      dom.requestList.append(item);
-    });
+    }).join("");
   }
 
   function renderDetail() {
@@ -353,18 +391,42 @@
     dom.detailStatus.textContent = formatStatus(selected);
     dom.detailType.textContent = selected.mimeType || "Unknown type";
     dom.detailDuration.textContent = formatDuration(selected.duration);
-    dom.allQueryOutput.textContent = selected.formatted.query;
-    dom.allRequestHeadersOutput.textContent = selected.formatted.requestHeaders;
-    dom.allRequestBodyOutput.textContent = selected.formatted.requestBody;
-    dom.allResponseHeadersOutput.textContent = selected.formatted.responseHeaders;
-    dom.allResponseBodyOutput.textContent = selected.formatted.responseBody;
-    dom.allTimingOutput.textContent = selected.formatted.timing;
-    dom.queryOutput.textContent = selected.formatted.query;
-    dom.timingOutput.textContent = selected.formatted.timing;
-    dom.requestHeadersOutput.textContent = selected.formatted.requestHeaders;
-    dom.requestBodyOutput.textContent = selected.formatted.requestBody;
-    dom.responseHeadersOutput.textContent = selected.formatted.responseHeaders;
-    dom.responseBodyOutput.textContent = selected.formatted.responseBody;
+    renderActiveTabContent(selected);
+  }
+
+  function renderActiveTabContent(selected) {
+    const tab = state.activeTab;
+
+    if (tab === "all") {
+      dom.allQueryOutput.textContent = getFormattedValue(selected, "query");
+      dom.allRequestHeadersOutput.textContent = getFormattedValue(selected, "requestHeaders");
+      dom.allRequestBodyOutput.textContent = getFormattedValue(selected, "requestBody");
+      dom.allResponseHeadersOutput.textContent = getFormattedValue(selected, "responseHeaders");
+      dom.allResponseBodyOutput.textContent = getFormattedValue(selected, "responseBody");
+      dom.allTimingOutput.textContent = getFormattedValue(selected, "timing");
+      return;
+    }
+
+    if (tab === "query") {
+      dom.queryOutput.textContent = getFormattedValue(selected, "query");
+      return;
+    }
+
+    if (tab === "request") {
+      dom.requestHeadersOutput.textContent = getFormattedValue(selected, "requestHeaders");
+      dom.requestBodyOutput.textContent = getFormattedValue(selected, "requestBody");
+      return;
+    }
+
+    if (tab === "response") {
+      dom.responseHeadersOutput.textContent = getFormattedValue(selected, "responseHeaders");
+      dom.responseBodyOutput.textContent = getFormattedValue(selected, "responseBody");
+      return;
+    }
+
+    if (tab === "timing") {
+      dom.timingOutput.textContent = getFormattedValue(selected, "timing");
+    }
   }
 
   function formatStatus(entry) {
@@ -417,9 +479,25 @@
       renderList();
     });
 
+    dom.requestList.addEventListener("click", function selectEntry(event) {
+      const item = event.target.closest("[data-id]");
+
+      if (!item) {
+        return;
+      }
+
+      state.selectedId = item.dataset.id;
+      renderList();
+      renderDetail();
+      dom.detailContainer?.scrollTo({ top: 0, behavior: "auto" });
+    });
+
     document.querySelectorAll("[data-tab]").forEach(function bindTab(tabButton) {
       tabButton.addEventListener("click", function activateTab() {
         const tab = tabButton.dataset.tab;
+        const selected = getSelectedEntry();
+
+        state.activeTab = tab;
 
         document.querySelectorAll("[data-tab]").forEach(function resetTab(button) {
           button.classList.toggle("is-active", button === tabButton);
@@ -428,6 +506,10 @@
         document.querySelectorAll("[data-panel]").forEach(function resetPanel(panel) {
           panel.classList.toggle("is-active", panel.dataset.panel === tab);
         });
+
+        if (selected) {
+          renderActiveTabContent(selected);
+        }
       });
     });
 
@@ -442,11 +524,11 @@
     const selected = getSelectedEntry();
     const key = button.dataset.copy;
 
-    if (!selected || !key || !selected.formatted[key]) {
+    if (!selected || !key) {
       return;
     }
 
-    copyText(selected.formatted[key])
+    copyText(getFormattedValue(selected, key, { forCopy: true }))
       .then(function showCopied() {
         const originalText = button.textContent;
         button.textContent = "已复制";
