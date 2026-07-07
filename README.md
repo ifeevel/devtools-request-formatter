@@ -2,7 +2,7 @@
 
 一个零构建的 Chrome DevTools 扩展，用于在 DevTools 内直接格式化 Network 请求、响应以及 WebSocket 消息数据。
 
-![DevTools Request Formatter Screenshot](docs/screenshots/request-formatter-demo.png)
+![DevTools Request Formatter Screenshot](assets/screenshots/screenshot.png)
 
 ## 功能
 

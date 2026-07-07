@@ -31,6 +31,10 @@ if [[ -d "$ROOT_DIR/assets/icons" ]]; then
   )
 fi
 
+if [[ -d "$ROOT_DIR/_locales" ]]; then
+  FILES+=(_locales)
+fi
+
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 

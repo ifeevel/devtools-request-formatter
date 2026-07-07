@@ -1,0 +1,100 @@
+{
+  "extensionName": {
+    "message": "Request Formatter for DevTools"
+  },
+  "extensionDescription": {
+    "message": "在 Chrome DevTools 中直接格式化 HTTP 请求、响应与 WebSocket 数据。"
+  },
+  "appDescription": {
+    "message": "格式化 DevTools Network 请求、响应与 WebSocket 消息"
+  },
+  "requestFilterPlaceholder": {
+    "message": "按 URL、方法、状态过滤"
+  },
+  "clearButton": {
+    "message": "清空"
+  },
+  "emptyStateTitle": {
+    "message": "等待请求"
+  },
+  "emptyStateDescription": {
+    "message": "打开当前页面的 Network 请求后，这里会展示可格式化的 request、response 与 WebSocket 数据。"
+  },
+  "copyButton": {
+    "message": "复制"
+  },
+  "copyCurrentMessageButton": {
+    "message": "复制当前消息"
+  },
+  "copiedButton": {
+    "message": "已复制"
+  },
+  "copyFailedButton": {
+    "message": "复制失败"
+  },
+  "messageFilterPlaceholder": {
+    "message": "按消息内容过滤"
+  },
+  "websocketSummaryAll": {
+    "message": "共 $count$ 条消息，最多保留最近 $limit$ 条。",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      },
+      "limit": {
+        "content": "$2"
+      }
+    }
+  },
+  "websocketSummaryFiltered": {
+    "message": "过滤后 $filtered$ 条，原始共 $total$ 条。",
+    "placeholders": {
+      "filtered": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      }
+    }
+  },
+  "noMatchingMessages": {
+    "message": "暂无匹配消息"
+  },
+  "noMessageSelected": {
+    "message": "未选中消息"
+  },
+  "noMatchingRequests": {
+    "message": "暂无匹配请求"
+  },
+  "devtoolsUnavailable": {
+    "message": "当前页面不在 Chrome DevTools Extension 环境中，请以未打包扩展加载后打开 DevTools 使用。"
+  },
+  "websocketUnavailable": {
+    "message": "当前环境无法启用 WebSocket 消息捕获。"
+  },
+  "websocketEnabled": {
+    "message": "WebSocket 消息捕获已启用。Chrome 可能会在页面顶部显示调试提示。"
+  },
+  "websocketEnableFailed": {
+    "message": "WebSocket 消息捕获启用失败：$error$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "websocketNotConnected": {
+    "message": "WebSocket 调试未处于连接状态。"
+  },
+  "websocketDisconnected": {
+    "message": "WebSocket 调试连接已断开。"
+  },
+  "websocketDisconnectedWithReason": {
+    "message": "WebSocket 调试连接已断开：$reason$",
+    "placeholders": {
+      "reason": {
+        "content": "$1"
+      }
+    }
+  }
+}
