@@ -173,6 +173,8 @@ pre {
 }
 
 .request-formatter-item {
+  --rf-item-method-width: 3rem;
+  --rf-item-gap: 0.55rem;
   width: 100%;
   margin: 0;
   padding: 0.65rem 0.7rem;
@@ -191,11 +193,11 @@ pre {
 .request-formatter-item-main {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: var(--rf-item-gap);
 }
 
 .request-formatter-item-method {
-  min-width: 3rem;
+  min-width: var(--rf-item-method-width);
   color: var(--rf-accent);
   font-size: 0.6875rem;
   font-weight: 700;
@@ -210,8 +212,9 @@ pre {
 }
 
 .request-formatter-item-sub {
-  display: flex;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: var(--rf-item-method-width) minmax(0, 1fr);
+  column-gap: var(--rf-item-gap);
   margin-top: 0.3rem;
   color: var(--rf-text-muted);
   font-size: 0.6875rem;
