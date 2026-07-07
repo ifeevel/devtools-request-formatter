@@ -7,7 +7,8 @@
     selectedId: null,
     filterText: "",
     captureEnabled: true,
-    activeTab: "all"
+    activeTab: "all",
+    listItemMap: new Map()
   };
 
   const dom = {
@@ -281,17 +282,30 @@
   }
 
   function addEntry(entry) {
+    const previousSelectedId = state.selectedId;
     state.entries.unshift(entry);
+    let removedEntries = [];
 
     if (state.entries.length > MAX_ENTRIES) {
-      state.entries.length = MAX_ENTRIES;
+      removedEntries = state.entries.splice(MAX_ENTRIES);
     }
 
     if (!state.selectedId) {
       state.selectedId = entry.id;
     }
 
-    renderList();
+    removedEntries.forEach(function removeTrimmedEntry(removedEntry) {
+      removeListItem(removedEntry.id);
+    });
+
+    if (removedEntries.some(function includesSelected(removedEntry) {
+      return removedEntry.id === previousSelectedId;
+    })) {
+      state.selectedId = entry.id;
+    }
+
+    insertListItem(entry);
+    updateActiveListItem(state.selectedId, previousSelectedId);
 
     if (state.selectedId === entry.id) {
       renderDetail();
@@ -331,15 +345,7 @@
     }
 
     return state.entries.filter(function filterEntry(entry) {
-      return [
-        entry.method,
-        entry.url,
-        String(entry.status),
-        entry.statusText,
-        entry.mimeType
-      ].some(function includesKeyword(value) {
-        return String(value || "").toLowerCase().includes(keyword);
-      });
+      return matchesEntryFilter(entry, keyword);
     });
   }
 
@@ -349,30 +355,7 @@
   }
 
   function renderList() {
-    const entries = getFilteredEntries();
-
-    if (entries.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "request-formatter-empty";
-      empty.innerHTML = "<p>暂无匹配请求</p>";
-      dom.requestList.replaceChildren(empty);
-      return;
-    }
-
-    dom.requestList.innerHTML = entries.map(function renderEntry(entry) {
-      return [
-        `<button type="button" class="request-formatter-item${entry.id === state.selectedId ? " is-active" : ""}" data-id="${escapeHtml(entry.id)}">`,
-        '<div class="request-formatter-item-main">',
-        `<span class="request-formatter-item-method">${escapeHtml(entry.method)}</span>`,
-        `<span class="request-formatter-item-url">${escapeHtml(shortenUrl(entry.url))}</span>`,
-        "</div>",
-        '<div class="request-formatter-item-sub">',
-        `<span>${escapeHtml(formatStatus(entry))}</span>`,
-        `<span>${escapeHtml(formatDuration(entry.duration))}</span>`,
-        "</div>",
-        "</button>"
-      ].join("");
-    }).join("");
+    rebuildList();
   }
 
   function renderDetail() {
@@ -463,6 +446,122 @@
       .replaceAll("'", "&#39;");
   }
 
+  function matchesEntryFilter(entry, keyword) {
+    return [
+      entry.method,
+      entry.url,
+      String(entry.status),
+      entry.statusText,
+      entry.mimeType
+    ].some(function includesKeyword(value) {
+      return String(value || "").toLowerCase().includes(keyword);
+    });
+  }
+
+  function shouldRenderEntry(entry) {
+    const keyword = state.filterText.trim().toLowerCase();
+
+    if (!keyword) {
+      return true;
+    }
+
+    return matchesEntryFilter(entry, keyword);
+  }
+
+  function createListItem(entry) {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "request-formatter-item";
+    item.dataset.id = entry.id;
+
+    if (entry.id === state.selectedId) {
+      item.classList.add("is-active");
+    }
+
+    item.innerHTML = [
+      '<div class="request-formatter-item-main">',
+      `<span class="request-formatter-item-method">${escapeHtml(entry.method)}</span>`,
+      `<span class="request-formatter-item-url">${escapeHtml(shortenUrl(entry.url))}</span>`,
+      "</div>",
+      '<div class="request-formatter-item-sub">',
+      `<span>${escapeHtml(formatStatus(entry))}</span>`,
+      `<span>${escapeHtml(formatDuration(entry.duration))}</span>`,
+      "</div>"
+    ].join("");
+
+    return item;
+  }
+
+  function renderEmptyListState() {
+    const empty = document.createElement("div");
+    empty.className = "request-formatter-empty";
+    empty.innerHTML = "<p>暂无匹配请求</p>";
+    dom.requestList.replaceChildren(empty);
+  }
+
+  function rebuildList() {
+    const entries = getFilteredEntries();
+    state.listItemMap.clear();
+
+    if (entries.length === 0) {
+      renderEmptyListState();
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    entries.forEach(function appendEntry(entry) {
+      const item = createListItem(entry);
+      state.listItemMap.set(entry.id, item);
+      fragment.append(item);
+    });
+
+    dom.requestList.replaceChildren(fragment);
+  }
+
+  function insertListItem(entry) {
+    if (!shouldRenderEntry(entry)) {
+      return;
+    }
+
+    const item = createListItem(entry);
+    const emptyState = dom.requestList.querySelector(".request-formatter-empty");
+
+    state.listItemMap.set(entry.id, item);
+
+    if (emptyState) {
+      dom.requestList.replaceChildren(item);
+      return;
+    }
+
+    dom.requestList.prepend(item);
+  }
+
+  function removeListItem(id) {
+    const item = state.listItemMap.get(id);
+
+    if (!item) {
+      return;
+    }
+
+    item.remove();
+    state.listItemMap.delete(id);
+
+    if (state.listItemMap.size === 0) {
+      renderEmptyListState();
+    }
+  }
+
+  function updateActiveListItem(nextId, previousId) {
+    if (previousId && previousId !== nextId) {
+      state.listItemMap.get(previousId)?.classList.remove("is-active");
+    }
+
+    if (nextId) {
+      state.listItemMap.get(nextId)?.classList.add("is-active");
+    }
+  }
+
   function bindEvents() {
     dom.captureToggle.addEventListener("change", function updateCapture(event) {
       state.captureEnabled = event.target.checked;
@@ -481,13 +580,14 @@
 
     dom.requestList.addEventListener("click", function selectEntry(event) {
       const item = event.target.closest("[data-id]");
+      const previousSelectedId = state.selectedId;
 
       if (!item) {
         return;
       }
 
       state.selectedId = item.dataset.id;
-      renderList();
+      updateActiveListItem(state.selectedId, previousSelectedId);
       renderDetail();
       dom.detailContainer?.scrollTo({ top: 0, behavior: "auto" });
     });
