@@ -284,11 +284,7 @@
   function addEntry(entry) {
     const previousSelectedId = state.selectedId;
     state.entries.unshift(entry);
-    let removedEntries = [];
-
-    if (state.entries.length > MAX_ENTRIES) {
-      removedEntries = state.entries.splice(MAX_ENTRIES);
-    }
+    const removedEntries = trimEntries();
 
     if (!state.selectedId) {
       state.selectedId = entry.id;
@@ -298,8 +294,8 @@
       removeListItem(removedEntry.id);
     });
 
-    if (removedEntries.some(function includesSelected(removedEntry) {
-      return removedEntry.id === previousSelectedId;
+    if (!state.entries.some(function includesSelected(item) {
+      return item.id === state.selectedId;
     })) {
       state.selectedId = entry.id;
     }
@@ -310,6 +306,25 @@
     if (state.selectedId === entry.id) {
       renderDetail();
     }
+  }
+
+  function trimEntries() {
+    const removedEntries = [];
+
+    while (state.entries.length > MAX_ENTRIES) {
+      const selectedIndex = state.entries.findIndex(function findSelectedIndex(item) {
+        return item.id === state.selectedId;
+      });
+      const preserveSelected = selectedIndex >= MAX_ENTRIES;
+      const removalIndex = preserveSelected ? MAX_ENTRIES - 1 : state.entries.length - 1;
+      const removedEntry = state.entries.splice(removalIndex, 1)[0];
+
+      if (removedEntry) {
+        removedEntries.push(removedEntry);
+      }
+    }
+
+    return removedEntries;
   }
 
   function updateEntryContent(id, content, encoding, isUnavailable) {
