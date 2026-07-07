@@ -1,6 +1,6 @@
 # DevTools Request Formatter
 
-一个零构建的 Chrome DevTools 扩展，用于在 DevTools 内直接格式化 Network 请求与响应数据。
+一个零构建的 Chrome DevTools 扩展，用于在 DevTools 内直接格式化 Network 请求、响应以及 WebSocket 消息数据。
 
 ![DevTools Request Formatter Screenshot](docs/screenshots/request-formatter-demo.png)
 
@@ -11,6 +11,8 @@
 - 展示请求方法、URL、状态码、类型、耗时
 - 格式化 `URL Params`、`Request Headers`、`Request Body`、`Response Headers`、`Response Body`
 - 自动美化 `JSON` 与 `application/x-www-form-urlencoded` 数据
+- 支持查看 `WebSocket` 握手信息、连接状态、消息列表与消息详情
+- 自动格式化 `WebSocket` 文本帧中的 `JSON` 消息
 - 支持过滤请求、暂停捕获、清空列表、复制格式化结果
 
 ## 项目结构
@@ -85,5 +87,8 @@ release/devtools-request-formatter-v<version>.zip
 ## 限制
 
 - Chrome 只会暴露 `DevTools` 打开期间捕获到的请求
+- `WebSocket` 消息捕获依赖 `chrome.debugger` 权限；启用后 Chrome 可能会显示“此标签页正在被调试”的提示
+- 当前 `WebSocket` v1 版本仅对文本帧和 JSON 帧做格式化展示；二进制帧只显示大小与基础信息
+- `WebSocket` 消息列表最多保留每个连接最近 `500` 条消息，以避免面板卡顿
 - 二进制响应会以 `base64` 提示展示，不做图片、压缩包等内容解析
 - 某些跨进程、缓存或浏览器内部请求可能无法读取 `response body`，这是 `Chrome DevTools API` 的限制
