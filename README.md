@@ -18,6 +18,7 @@
 ```text
 devtools-request-formatter/
 ├── .github/workflows/release.yml
+├── assets/
 ├── docs/screenshots/request-formatter-demo.png
 ├── scripts/package.sh
 ├── devtools.html
