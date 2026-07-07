@@ -77,9 +77,9 @@ button:hover {
 }
 
 pre {
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
   min-height: 4.5rem;
-  max-height: 26rem;
   margin: 0;
   padding: 0.9rem;
   border-radius: 0.75rem;
@@ -90,8 +90,7 @@ pre {
     "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 0.75rem;
   line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-word;
+  white-space: pre;
 }
 
 .request-formatter-shell {
@@ -171,10 +170,11 @@ pre {
   flex: 1;
   min-height: 0;
   padding: 0.5rem;
-  overscroll-behavior: contain;
 }
 
 .request-formatter-item {
+  --rf-item-method-width: 3rem;
+  --rf-item-gap: 0.55rem;
   width: 100%;
   margin: 0;
   padding: 0.65rem 0.7rem;
@@ -193,11 +193,11 @@ pre {
 .request-formatter-item-main {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: var(--rf-item-gap);
 }
 
 .request-formatter-item-method {
-  min-width: 3rem;
+  min-width: var(--rf-item-method-width);
   color: var(--rf-accent);
   font-size: 0.6875rem;
   font-weight: 700;
@@ -212,8 +212,9 @@ pre {
 }
 
 .request-formatter-item-sub {
-  display: flex;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: var(--rf-item-method-width) minmax(0, 1fr);
+  column-gap: var(--rf-item-gap);
   margin-top: 0.3rem;
   color: var(--rf-text-muted);
   font-size: 0.6875rem;
@@ -224,7 +225,6 @@ pre {
   min-width: 0;
   min-height: 0;
   padding: 1rem;
-  overscroll-behavior: contain;
 }
 
 .request-formatter-empty {
