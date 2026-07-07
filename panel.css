@@ -9,6 +9,7 @@
   --rf-accent: #007aff;
   --rf-accent-soft: rgba(0, 122, 255, 0.1);
   --rf-danger: #c2410c;
+  --rf-websocket-accent: #0f766e;
   --rf-shadow: none;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -26,6 +27,7 @@
     --rf-accent: #007aff;
     --rf-accent-soft: rgba(0, 122, 255, 0.16);
     --rf-danger: #fb923c;
+    --rf-websocket-accent: #5eead4;
     --rf-shadow: none;
   }
 }
@@ -138,12 +140,27 @@ pre {
   user-select: none;
 }
 
+.request-formatter-toggle-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
 .request-formatter-actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   border-bottom: 0.0625rem solid var(--rf-border);
+}
+
+.request-formatter-status {
+  margin: 0;
+  padding: 0.65rem 1rem 0;
+  color: var(--rf-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
 }
 
 .request-formatter-actions input {
@@ -202,6 +219,10 @@ pre {
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.04em;
+}
+
+.request-formatter-item-method.is-websocket {
+  color: var(--rf-websocket-accent);
 }
 
 .request-formatter-item-url {
@@ -346,6 +367,104 @@ pre {
   padding: 0.35rem 0.65rem;
   color: var(--rf-text-muted);
   font-size: 0.75rem;
+}
+
+.request-formatter-message-toolbar {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.request-formatter-message-toolbar input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.55rem 0.7rem;
+  border: 0.0625rem solid var(--rf-border);
+  border-radius: 0.6rem;
+  color: var(--rf-text);
+  background: var(--rf-bg);
+  outline: none;
+}
+
+.request-formatter-message-toolbar input:focus {
+  border-color: var(--rf-accent);
+}
+
+.request-formatter-message-summary,
+.request-formatter-message-meta {
+  margin: 0;
+  color: var(--rf-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.request-formatter-message-list {
+  display: grid;
+  gap: 0.5rem;
+  min-height: 0;
+  max-height: 20rem;
+  overflow: auto;
+}
+
+.request-formatter-message-item {
+  width: 100%;
+  margin: 0;
+  padding: 0.75rem 0.8rem;
+  border: 0.0625rem solid var(--rf-border);
+  border-radius: 0.75rem;
+  background: var(--rf-surface);
+  text-align: left;
+  transform: none;
+}
+
+.request-formatter-message-item:hover,
+.request-formatter-message-item.is-active {
+  background: var(--rf-accent-soft);
+  border-color: var(--rf-accent);
+  color: var(--rf-text);
+}
+
+.request-formatter-message-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.request-formatter-message-direction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.request-formatter-message-direction.is-sent {
+  color: var(--rf-websocket-accent);
+}
+
+.request-formatter-message-direction.is-received {
+  color: var(--rf-accent);
+}
+
+.request-formatter-message-size {
+  color: var(--rf-text-muted);
+  font-size: 0.6875rem;
+}
+
+.request-formatter-message-preview {
+  overflow: hidden;
+  margin: 0.45rem 0 0;
+  color: var(--rf-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.request-formatter-inline-empty {
+  padding: 1rem;
+  border: 0.0625rem dashed var(--rf-border);
+  border-radius: 0.75rem;
+  color: var(--rf-text-muted);
+  text-align: center;
 }
 
 @media (max-width: 46rem) {

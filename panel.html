@@ -12,12 +12,18 @@
         <header class="request-formatter-toolbar">
           <div>
             <h1>Request Formatter</h1>
-            <p>格式化 DevTools Network 请求与响应</p>
+            <p>格式化 DevTools Network 请求、响应与 WebSocket 消息</p>
           </div>
-          <label class="request-formatter-toggle">
-            <input id="capture-toggle" type="checkbox" checked />
-            <span>捕获</span>
-          </label>
+          <div class="request-formatter-toggle-group">
+            <label class="request-formatter-toggle">
+              <input id="capture-toggle" type="checkbox" checked />
+              <span>HTTP</span>
+            </label>
+            <label class="request-formatter-toggle">
+              <input id="websocket-toggle" type="checkbox" />
+              <span>WebSocket</span>
+            </label>
+          </div>
         </header>
 
         <div class="request-formatter-actions">
@@ -30,13 +36,15 @@
           <button id="clear-button" type="button">清空</button>
         </div>
 
+        <p id="capture-status" class="request-formatter-status" hidden></p>
+
         <div id="request-list" class="request-formatter-list" role="list"></div>
       </aside>
 
       <section class="request-formatter-detail" aria-label="Request detail">
         <div id="empty-state" class="request-formatter-empty">
           <h2>等待请求</h2>
-          <p>打开当前页面的 Network 请求后，这里会展示可格式化的 request 与 response 数据。</p>
+          <p>打开当前页面的 Network 请求后，这里会展示可格式化的 request、response 与 WebSocket 数据。</p>
         </div>
 
         <article id="detail-view" class="request-formatter-detail-view" hidden>
@@ -53,14 +61,18 @@
           </header>
 
           <nav class="request-formatter-tabs" aria-label="Detail tabs">
-            <button class="is-active" type="button" data-tab="all">All</button>
-            <button type="button" data-tab="query">URL Params</button>
-            <button type="button" data-tab="request">Request</button>
-            <button type="button" data-tab="response">Response</button>
-            <button type="button" data-tab="timing">Timing</button>
+            <button class="is-active" type="button" data-kind="http" data-tab="all">All</button>
+            <button type="button" data-kind="http" data-tab="query">URL Params</button>
+            <button type="button" data-kind="http" data-tab="request">Request</button>
+            <button type="button" data-kind="http" data-tab="response">Response</button>
+            <button type="button" data-kind="http" data-tab="timing">Timing</button>
+            <button type="button" data-kind="websocket" data-tab="overview" hidden>Overview</button>
+            <button type="button" data-kind="websocket" data-tab="handshake" hidden>Handshake</button>
+            <button type="button" data-kind="websocket" data-tab="messages" hidden>Messages</button>
+            <button type="button" data-kind="websocket" data-tab="timing" hidden>Timing</button>
           </nav>
 
-          <div class="request-formatter-tab-panel is-active" data-panel="all">
+          <div class="request-formatter-tab-panel is-active" data-kind="http" data-panel="all">
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>URL Params</h3>
@@ -105,7 +117,7 @@
             </section>
           </div>
 
-          <div class="request-formatter-tab-panel" data-panel="query">
+          <div class="request-formatter-tab-panel" data-kind="http" data-panel="query">
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>URL Params</h3>
@@ -115,7 +127,7 @@
             </section>
           </div>
 
-          <div class="request-formatter-tab-panel" data-panel="request">
+          <div class="request-formatter-tab-panel" data-kind="http" data-panel="request">
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Request Headers</h3>
@@ -132,7 +144,7 @@
             </section>
           </div>
 
-          <div class="request-formatter-tab-panel" data-panel="response">
+          <div class="request-formatter-tab-panel" data-kind="http" data-panel="response">
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Response Headers</h3>
@@ -149,13 +161,83 @@
             </section>
           </div>
 
-          <div class="request-formatter-tab-panel" data-panel="timing">
+          <div class="request-formatter-tab-panel" data-kind="http" data-panel="timing">
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Timing</h3>
                 <button type="button" data-copy="timing">复制</button>
               </div>
               <pre id="timing-output"></pre>
+            </section>
+          </div>
+
+          <div class="request-formatter-tab-panel" data-kind="websocket" data-panel="overview">
+            <section class="request-formatter-card">
+              <div class="request-formatter-card-title">
+                <h3>Overview</h3>
+                <button type="button" data-copy="wsOverview">复制</button>
+              </div>
+              <pre id="ws-overview-output"></pre>
+            </section>
+          </div>
+
+          <div class="request-formatter-tab-panel" data-kind="websocket" data-panel="handshake">
+            <section class="request-formatter-card">
+              <div class="request-formatter-card-title">
+                <h3>URL Params</h3>
+                <button type="button" data-copy="query">复制</button>
+              </div>
+              <pre id="ws-query-output"></pre>
+            </section>
+            <section class="request-formatter-card">
+              <div class="request-formatter-card-title">
+                <h3>Request Headers</h3>
+                <button type="button" data-copy="requestHeaders">复制</button>
+              </div>
+              <pre id="ws-request-headers-output"></pre>
+            </section>
+            <section class="request-formatter-card">
+              <div class="request-formatter-card-title">
+                <h3>Response Headers</h3>
+                <button type="button" data-copy="responseHeaders">复制</button>
+              </div>
+              <pre id="ws-response-headers-output"></pre>
+            </section>
+          </div>
+
+          <div class="request-formatter-tab-panel" data-kind="websocket" data-panel="messages">
+            <section class="request-formatter-card">
+              <div class="request-formatter-card-title">
+                <h3>Messages</h3>
+                <button type="button" data-copy="wsMessage">复制当前消息</button>
+              </div>
+              <div class="request-formatter-message-toolbar">
+                <input
+                  id="ws-message-filter"
+                  type="search"
+                  placeholder="按消息内容过滤"
+                  aria-label="Filter websocket messages"
+                />
+                <p id="ws-message-summary" class="request-formatter-message-summary"></p>
+              </div>
+              <div id="ws-message-list" class="request-formatter-message-list" role="list"></div>
+            </section>
+            <section class="request-formatter-card">
+              <div class="request-formatter-card-title">
+                <h3>Message Detail</h3>
+              </div>
+              <p id="ws-message-meta" class="request-formatter-message-meta"></p>
+              <pre id="ws-message-output"></pre>
+            </section>
+          </div>
+
+          <div class="request-formatter-tab-panel" data-kind="websocket" data-panel="timing">
+            <section class="request-formatter-card">
+              <div class="request-formatter-card-title">
+                <h3>Timing</h3>
+                <button type="button" data-copy="timing">复制</button>
+              </div>
+              <pre id="ws-timing-output"></pre>
             </section>
           </div>
         </article>

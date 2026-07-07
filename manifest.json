@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "DevTools Request Formatter",
-  "version": "0.2.0",
-  "description": "Format request and response payloads directly inside Chrome DevTools.",
+  "version": "0.3.0",
+  "description": "Format HTTP request, response, and WebSocket payloads directly inside Chrome DevTools.",
   "devtools_page": "devtools.html",
-  "permissions": ["clipboardWrite"]
+  "permissions": ["clipboardWrite", "debugger"]
 }
