@@ -77,9 +77,9 @@ button:hover {
 }
 
 pre {
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
   min-height: 4.5rem;
-  max-height: 26rem;
   margin: 0;
   padding: 0.9rem;
   border-radius: 0.75rem;
@@ -90,8 +90,7 @@ pre {
     "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 0.75rem;
   line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-word;
+  white-space: pre;
 }
 
 .request-formatter-shell {
@@ -171,7 +170,6 @@ pre {
   flex: 1;
   min-height: 0;
   padding: 0.5rem;
-  overscroll-behavior: contain;
 }
 
 .request-formatter-item {
@@ -224,7 +222,6 @@ pre {
   min-width: 0;
   min-height: 0;
   padding: 1rem;
-  overscroll-behavior: contain;
 }
 
 .request-formatter-empty {
