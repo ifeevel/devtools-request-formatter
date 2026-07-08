@@ -59,16 +59,16 @@
 
         <article id="detail-view" class="request-formatter-detail-view" hidden>
           <header class="request-formatter-detail-header">
-            <div>
-              <p id="detail-method" class="request-formatter-method"></p>
-              <h2 id="detail-url"></h2>
-            </div>
-            <div class="request-formatter-meta">
-              <span id="detail-status"></span>
-              <span id="detail-type"></span>
-              <span id="detail-duration"></span>
-            </div>
-          </header>
+        <div class="request-formatter-detail-top">
+          <p id="detail-method" class="request-formatter-method"></p>
+          <div class="request-formatter-meta">
+            <span id="detail-status"></span>
+            <span id="detail-type"></span>
+            <span id="detail-duration"></span>
+          </div>
+        </div>
+        <h2 id="detail-url"></h2>
+      </header>
 
           <nav class="request-formatter-tabs" aria-label="Detail tabs">
             <button class="is-active" type="button" data-kind="http" data-tab="all">All</button>
@@ -255,6 +255,6 @@
       </section>
     </main>
 
-    <script src="panel.js"></script>
+    <script type="module" src="panel.js"></script>
   </body>
 </html>

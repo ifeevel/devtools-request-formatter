@@ -32,16 +32,20 @@ devtools-request-formatter/
 ├── .github/workflows/release.yml
 ├── _locales/
 ├── assets/
-├── scripts/package.sh
+├── scripts/
+│   └── package.sh
 ├── devtools.html
 ├── devtools.js
+├── formatters.js
+├── i18n.js
 ├── manifest.json
 ├── panel.css
 ├── panel.html
 ├── panel.js
+├── panel-websocket.js
 ├── LICENSE
 ├── README.md
-└── README.en.md
+└── README.EN.md
 ```
 
 项目保持零构建结构，扩展运行入口文件直接位于仓库根目录。

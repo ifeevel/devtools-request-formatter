@@ -279,9 +279,8 @@ pre {
 
 .request-formatter-detail-header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.5rem;
   padding: 1rem;
   border: 0.0625rem solid var(--rf-border);
   border-radius: 1rem;
@@ -289,9 +288,16 @@ pre {
   box-shadow: var(--rf-shadow);
 }
 
+.request-formatter-detail-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 .request-formatter-detail-header h2 {
   overflow-wrap: anywhere;
-  margin: 0.25rem 0 0;
+  margin: 0;
   font-size: 0.95rem;
   line-height: 1.45;
 }
@@ -310,7 +316,6 @@ pre {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.45rem;
-  min-width: 10rem;
 }
 
 .request-formatter-meta span {
