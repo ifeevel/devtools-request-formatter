@@ -8,7 +8,7 @@
 ![i18n en zh-CN](https://img.shields.io/badge/i18n-en%20%7C%20zh--CN-007AFF)
 ![License MIT](https://img.shields.io/badge/License-MIT-white)
 
-[简体中文](./README.md) | [English](./README.en.md)
+[简体中文](./README.md) | [English](./README.EN.md)
 
 一个零构建的 Chrome DevTools 扩展，用于在 DevTools 内直接格式化 HTTP 请求、响应以及 WebSocket 消息数据。
 
