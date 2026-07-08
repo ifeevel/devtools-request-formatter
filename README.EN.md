@@ -8,7 +8,7 @@
 ![i18n en zh-CN](https://img.shields.io/badge/i18n-en%20%7C%20zh--CN-007AFF)
 ![License MIT](https://img.shields.io/badge/License-MIT-white)
 
-[简体中文](./README.md) | [English](README.EN.md)
+[简体中文](./README.md) | [English](./README.EN.md)
 
 Zero-build Chrome DevTools extension for formatting HTTP requests, responses, and WebSocket message data directly inside DevTools.
 
@@ -32,16 +32,20 @@ devtools-request-formatter/
 ├── .github/workflows/release.yml
 ├── _locales/
 ├── assets/
-├── scripts/package.sh
+├── scripts/
+│   └── package.sh
 ├── devtools.html
 ├── devtools.js
+├── formatters.js
+├── i18n.js
 ├── manifest.json
 ├── panel.css
 ├── panel.html
 ├── panel.js
+├── panel-websocket.js
 ├── LICENSE
 ├── README.md
-└── README.en.md
+└── README.EN.md
 ```
 
 The project keeps a zero-build structure, and the extension runtime entry files are located directly at the repository root.
