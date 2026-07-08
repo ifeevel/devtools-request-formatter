@@ -22,8 +22,17 @@ FILES=(
   panel.css
 )
 
-if [[ -d "$ROOT_DIR/icons" ]]; then
-  FILES+=(icons)
+if [[ -d "$ROOT_DIR/assets/icons" ]]; then
+  FILES+=(
+    assets/icons/icon16.png
+    assets/icons/icon32.png
+    assets/icons/icon48.png
+    assets/icons/icon128.png
+  )
+fi
+
+if [[ -d "$ROOT_DIR/_locales" ]]; then
+  FILES+=(_locales)
 fi
 
 rm -rf "$OUTPUT_DIR"
