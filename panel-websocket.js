@@ -170,6 +170,10 @@ export function createController(deps) {
         return "No message selected";
       }
 
+      if (options?.forCopy) {
+        return frame.payloadData || "";
+      }
+
       const payload = formatFramePayload(frame, options);
 
       return [
