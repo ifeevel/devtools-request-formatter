@@ -17,8 +17,11 @@ FILES=(
   manifest.json
   devtools.html
   devtools.js
+  formatters.js
+  i18n.js
   panel.html
   panel.js
+  panel-websocket.js
   panel.css
 )
 
