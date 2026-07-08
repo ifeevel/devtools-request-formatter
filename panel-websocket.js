@@ -243,8 +243,10 @@ export function createController(deps) {
     }
 
     function renderMessageSummary(entry, filteredCount) {
+      const capturedCount = entry.websocket.sentCount + entry.websocket.receivedCount;
+
       dom.wsMessageSummary.textContent = filteredCount === entry.websocket.frames.length
-        ? t("websocketSummaryAll", [filteredCount, MAX_WEBSOCKET_FRAMES])
+        ? t("websocketSummaryAll", [capturedCount, MAX_WEBSOCKET_FRAMES])
         : t("websocketSummaryFiltered", [filteredCount, entry.websocket.frames.length]);
     }
 
@@ -533,7 +535,7 @@ export function createController(deps) {
       item.innerHTML = [
         '<div class="request-formatter-message-head">',
         `<span class="request-formatter-message-direction ${frame.direction === "sent" ? "is-sent" : "is-received"}">${escapeHtml(frame.direction === "sent" ? "↑ Sent" : "↓ Received")}</span>`,
-        `<span class="request-formatter-message-size">${escapeHtml(`${frame.type} · ${frame.size.toLocaleString()} bytes`)}</span>`,
+        `<span class="request-formatter-message-size">${escapeHtml(`${formatTimestamp(frame.timeMs) || "Unknown time"} · ${frame.type} · ${frame.size.toLocaleString()} bytes`)}</span>`,
         "</div>",
         `<p class="request-formatter-message-preview">${escapeHtml(getFramePreview(frame))}</p>`
       ].join("");
