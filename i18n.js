@@ -47,6 +47,30 @@ const FALLBACK_MESSAGES = {
     en: "Filter by message content",
     zh_CN: "按消息内容过滤"
   },
+  responseContentNotLoaded: {
+    en: "Response content is not loaded yet. Select the Response tab to load it.",
+    zh_CN: "响应内容尚未加载。请选择 Response 标签页加载。"
+  },
+  responseContentUnavailable: {
+    en: "Response content is unavailable. Keep DevTools open and preserve the Network log when needed.",
+    zh_CN: "响应内容不可用。需要保留内容时，请保持 DevTools 打开并保留 Network 日志。"
+  },
+  responseBase64Title: {
+    en: "[Base64 encoded response]",
+    zh_CN: "[Base64 编码响应]"
+  },
+  responseBase64Description: {
+    en: "Chrome returned this response as base64. Decode it externally if it is binary data.",
+    zh_CN: "Chrome 将此响应以 base64 返回。如果它是二进制数据，请在外部解码。"
+  },
+  payloadPreviewOnlyTitle: {
+    en: "[Preview only] Payload is too large to fully format in the panel ($1 chars).",
+    zh_CN: "[仅预览] Payload 过大，无法在面板中完整格式化（$1 字符）。"
+  },
+  payloadPreviewOnlyDescription: {
+    en: "Only the first $1 chars are shown to keep the UI responsive.",
+    zh_CN: "为保持界面响应，仅展示前 $1 个字符。"
+  },
   websocketBinaryPayloadUnsupported: {
     en: "Binary frame ($1 bytes). Raw payload decoding is not supported in v1. You can still copy the raw payload.",
     zh_CN: "Binary frame（$1 bytes）。v1 暂不支持解析原始 payload，但仍可复制原始内容。"

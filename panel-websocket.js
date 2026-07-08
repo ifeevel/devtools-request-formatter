@@ -199,7 +199,7 @@ export function createController(deps) {
       return formatPayload(
         frame.payloadData,
         frame.type === "json" ? "application/json" : "text/plain",
-          { ...options, preserveWhitespace: true }
+        { ...options, preserveWhitespace: true, t }
       );
     }
 

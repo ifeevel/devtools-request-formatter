@@ -184,12 +184,12 @@ import {
       return "No request body";
     }
 
-    return formatPayload(postData.text, postData.mimeType, options);
+    return formatPayload(postData.text, postData.mimeType, { ...options, t });
   }
 
   function formatResponseBody(entry, options) {
     if (entry.responseLoadState === "idle") {
-      return "Response content is not loaded yet. Select the Response tab to load it.";
+      return t("responseContentNotLoaded");
     }
 
     if (entry.responseLoadState === "loading") {
@@ -197,7 +197,7 @@ import {
     }
 
     if (entry.responseLoadState === "unavailable") {
-      return "Response content is unavailable. Keep DevTools open and preserve the Network log when needed.";
+      return t("responseContentUnavailable");
     }
 
     if (!entry.responseContent) {
@@ -206,14 +206,14 @@ import {
 
     if (entry.responseEncoding === "base64") {
       return [
-        "[Base64 encoded response]",
-        "Chrome returned this response as base64. Decode it externally if it is binary data.",
+        t("responseBase64Title"),
+        t("responseBase64Description"),
         "",
         entry.responseContent
       ].join("\n");
     }
 
-    return formatPayload(entry.responseContent, entry.mimeType, options);
+    return formatPayload(entry.responseContent, entry.mimeType, { ...options, t });
   }
 
   function formatHttpTiming(entry) {
