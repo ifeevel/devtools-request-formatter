@@ -70,7 +70,7 @@
     }
   },
   "websocketBinaryPayloadUnsupported": {
-    "message": "Binary frame ($size$ bytes). Raw payload decoding is not supported in v1. You can still copy the raw payload.",
+    "message": "Binary frame ($size$ bytes). Raw payload decoding is not supported. You can still copy the raw payload.",
     "placeholders": {
       "size": {
         "content": "$1"

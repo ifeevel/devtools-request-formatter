@@ -70,7 +70,7 @@
     }
   },
   "websocketBinaryPayloadUnsupported": {
-    "message": "Binary frame（$size$ bytes）。v1 暂不支持解析原始 payload，但仍可复制原始内容。",
+    "message": "Binary frame（$size$ bytes）。暂不支持解析原始 payload，但仍可复制原始内容。",
     "placeholders": {
       "size": {
         "content": "$1"
