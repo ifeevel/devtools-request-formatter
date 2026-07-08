@@ -1,11 +1,7 @@
 (function initRequestFormatterPanel() {
   const MAX_ENTRIES = 500;
-  const MAX_WEBSOCKET_FRAMES = 500;
   const LARGE_PAYLOAD_CHAR_LIMIT = 100000;
   const PAYLOAD_PREVIEW_CHAR_LIMIT = 20000;
-  const DEBUGGER_PROTOCOL_VERSION = "1.3";
-  const WEBSOCKET_MIME_TYPE = "WebSocket";
-  const WEBSOCKET_DEFAULT_PROTOCOL_LABEL = "WebSocket";
   const FALLBACK_MESSAGES = {
     appDescription: {
       en: "Format DevTools Network requests, responses, and WebSocket messages",
@@ -109,18 +105,15 @@
     selectedId: null,
     filterText: "",
     captureEnabled: true,
-      webSocketCaptureEnabled: false,
     activeTabs: {
       http: "all",
       websocket: "overview"
     },
     listItemMap: new Map(),
-    webSocketEntryIdsByRequestId: new Map(),
-    inspectedTabId: window.chrome?.devtools?.inspectedWindow?.tabId ?? null,
     httpCaptureBound: false,
-    debuggerEventsBound: false,
-    debuggerAttached: false,
-    debuggerPending: false
+    ...window.RequestFormatterWebSocket.createState({
+      inspectedTabId: window.chrome?.devtools?.inspectedWindow?.tabId ?? null
+    })
   };
 
   const dom = {
@@ -151,17 +144,7 @@
     tabButtons: Array.from(document.querySelectorAll("[data-tab]")),
     tabPanels: Array.from(document.querySelectorAll("[data-panel]")),
     timingOutput: document.getElementById("timing-output"),
-      websocketToggle: document.getElementById("websocket-toggle"),
-    wsMessageFilter: document.getElementById("ws-message-filter"),
-    wsMessageList: document.getElementById("ws-message-list"),
-    wsMessageMeta: document.getElementById("ws-message-meta"),
-    wsMessageOutput: document.getElementById("ws-message-output"),
-    wsMessageSummary: document.getElementById("ws-message-summary"),
-    wsOverviewOutput: document.getElementById("ws-overview-output"),
-    wsQueryOutput: document.getElementById("ws-query-output"),
-    wsRequestHeadersOutput: document.getElementById("ws-request-headers-output"),
-    wsResponseHeadersOutput: document.getElementById("ws-response-headers-output"),
-    wsTimingOutput: document.getElementById("ws-timing-output")
+    ...window.RequestFormatterWebSocket.createDomRefs(document)
   };
 
   function getFallbackLocale() {
@@ -207,6 +190,27 @@
     });
   }
 
+  const websocketController = window.RequestFormatterWebSocket.createController({
+    state,
+    dom,
+    t,
+    addEntry,
+    getEntryById,
+    getSelectedEntry,
+    getActiveTab,
+    refreshEntry,
+    resetFormattedCache,
+    formatPayload,
+    formatTimestamp,
+    escapeHtml,
+    shortenUrl,
+    setCaptureStatus,
+    formatQuery,
+    formatHeaders,
+    formatDuration,
+    updateDetailMeta
+  });
+
   function createHttpEntry(request) {
     const har = request || {};
     const response = har.response || {};
@@ -231,50 +235,6 @@
       queryString: har.request?.queryString || [],
       formattedPreviewCache: {},
       formattedCopyCache: {}
-    };
-  }
-
-  function createWebSocketEntry(requestId, url) {
-    const nowIso = new Date().toISOString();
-
-    return {
-      id: `ws-${requestId}-${Math.random().toString(16).slice(2)}`,
-      kind: "websocket",
-      method: "WS",
-      url: url || "",
-      status: 0,
-      statusText: "",
-      mimeType: WEBSOCKET_MIME_TYPE,
-      startedDateTime: nowIso,
-      duration: null,
-      requestHeaders: [],
-      requestPostData: null,
-      responseHeaders: [],
-      responseContent: "",
-      responseEncoding: "",
-      responseLoadState: "loaded",
-      timings: {},
-      queryString: parseQueryString(url),
-      formattedPreviewCache: {},
-      formattedCopyCache: {},
-      websocket: {
-        requestId,
-        state: "connecting",
-        protocol: "",
-        extensions: "",
-        sentCount: 0,
-        receivedCount: 0,
-        frameFilterText: "",
-        frames: [],
-        selectedFrameId: null,
-        errorText: "",
-        createdAtMs: null,
-        connectedAtMs: null,
-        closedAtMs: null,
-        lastEventAtMs: null,
-        timeOriginTimestamp: null,
-        timeOriginWallTimeMs: null
-      }
     };
   }
 
@@ -312,29 +272,7 @@
           break;
       }
     } else {
-      switch (key) {
-        case "query":
-          value = formatQuery(entry.url, entry.queryString);
-          break;
-        case "requestHeaders":
-          value = formatHeaders(entry.requestHeaders);
-          break;
-        case "responseHeaders":
-          value = formatHeaders(entry.responseHeaders);
-          break;
-        case "timing":
-          value = formatWebSocketTiming(entry);
-          break;
-        case "wsOverview":
-          value = formatWebSocketOverview(entry);
-          break;
-        case "wsMessage":
-          value = formatSelectedWebSocketMessage(entry, options);
-          break;
-        default:
-          value = "";
-          break;
-      }
+      value = websocketController.getFormattedValue(entry, key, options);
     }
 
     if (key !== "wsMessage") {
@@ -436,7 +374,9 @@
   }
 
   function formatPayload(text, mimeType, options) {
-    const source = String(text || "").trim();
+    const rawSource = String(text ?? "");
+    const source = options?.preserveWhitespace ? rawSource : rawSource.trim();
+    const detectionSource = source.trim();
     const type = String(mimeType || "").toLowerCase();
     const previewMode = !options?.forCopy;
 
@@ -453,7 +393,7 @@
       ].join("\n");
     }
 
-    if (looksLikeJson(type, source)) {
+    if (looksLikeJson(type, detectionSource)) {
       const formattedJson = tryFormatJson(source);
       if (formattedJson) {
         return formattedJson;
@@ -525,191 +465,6 @@
     );
   }
 
-  function formatWebSocketTiming(entry) {
-    const socket = entry.websocket;
-
-    return JSON.stringify(
-      {
-        startedDateTime: entry.startedDateTime || "Unknown",
-        state: socket.state,
-        createdAt: formatTimestamp(socket.createdAtMs),
-        connectedAt: formatTimestamp(socket.connectedAtMs),
-        closedAt: formatTimestamp(socket.closedAtMs),
-        lastEventAt: formatTimestamp(socket.lastEventAtMs),
-        durationMs: getWebSocketDuration(entry),
-        framesKept: socket.frames.length,
-        framesLimit: MAX_WEBSOCKET_FRAMES
-      },
-      null,
-      2
-    );
-  }
-
-  function formatWebSocketOverview(entry) {
-    const socket = entry.websocket;
-
-    return JSON.stringify(
-      {
-        url: entry.url,
-        state: socket.state,
-        handshakeStatus: formatEntryStatus(entry),
-        protocol: socket.protocol || "Not negotiated",
-        extensions: socket.extensions || "None",
-        sentMessages: socket.sentCount,
-        receivedMessages: socket.receivedCount,
-        framesKept: socket.frames.length,
-        error: socket.errorText || "",
-        connectedAt: formatTimestamp(socket.connectedAtMs),
-        closedAt: formatTimestamp(socket.closedAtMs),
-        durationMs: getWebSocketDuration(entry)
-      },
-      null,
-      2
-    );
-  }
-
-  function formatSelectedWebSocketMessage(entry, options) {
-    const frame = getSelectedWebSocketFrame(entry);
-
-    if (!frame) {
-      return "No message selected";
-    }
-
-    const payload = formatWebSocketFramePayload(frame, options);
-
-    return [
-      `Direction: ${frame.direction === "sent" ? "Sent" : "Received"}`,
-      `Type: ${frame.type}`,
-      `Opcode: ${frame.opcode}`,
-      `Size: ${frame.size.toLocaleString()} bytes`,
-      `Time: ${formatTimestamp(frame.timeMs) || "Unknown"}`,
-      "",
-      payload
-    ].join("\n");
-  }
-
-  function formatWebSocketFramePayload(frame, options) {
-    if (frame.type === "binary") {
-      return `Binary frame (${frame.size.toLocaleString()} bytes). Raw payload decoding is not supported in v1.`;
-    }
-
-    if (frame.type === "ping" || frame.type === "pong" || frame.type === "close") {
-      return frame.payloadData || "No payload";
-    }
-
-    return formatPayload(frame.payloadData, frame.type === "json" ? "application/json" : "text/plain", options);
-  }
-
-  function parseQueryString(url) {
-    try {
-      const parsedUrl = new URL(url);
-      const pairs = [];
-      parsedUrl.searchParams.forEach(function pushSearchParam(value, key) {
-        pairs.push({ name: key, value });
-      });
-      return pairs;
-    } catch (error) {
-      return [];
-    }
-  }
-
-  function normalizeHeaderValue(value) {
-    if (Array.isArray(value)) {
-      return value.join(", ");
-    }
-
-    if (value === null || value === undefined) {
-      return "";
-    }
-
-    return String(value);
-  }
-
-  function headerPairsFromObject(headers) {
-    if (!headers || typeof headers !== "object") {
-      return [];
-    }
-
-    return Object.keys(headers).map(function toHeaderPair(name) {
-      return {
-        name,
-        value: normalizeHeaderValue(headers[name])
-      };
-    });
-  }
-
-  function getHeaderValue(headers, headerName) {
-    const target = String(headerName || "").toLowerCase();
-    const found = (headers || []).find(function findHeader(header) {
-      return String(header.name || "").toLowerCase() === target;
-    });
-
-    return found?.value || "";
-  }
-
-  function createWebSocketFrame(entry, direction, response, timestamp) {
-    const payloadData = String(response?.payloadData || "");
-    const opcode = typeof response?.opcode === "number" ? response.opcode : -1;
-    const type = getWebSocketFrameType(payloadData, opcode);
-    const size = getTextByteLength(payloadData);
-    const timeMs = resolveEventTimeMs(entry, timestamp, null) || Date.now();
-
-    return {
-      id: `${entry.websocket.requestId}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      direction,
-      opcode,
-      type,
-      payloadData,
-      size,
-      timeMs
-    };
-  }
-
-  function getWebSocketFrameType(payloadData, opcode) {
-    if (opcode === 2) {
-      return "binary";
-    }
-
-    if (opcode === 8) {
-      return "close";
-    }
-
-    if (opcode === 9) {
-      return "ping";
-    }
-
-    if (opcode === 10) {
-      return "pong";
-    }
-
-    if (looksLikeJson("", String(payloadData || "").trim())) {
-      return "json";
-    }
-
-    return "text";
-  }
-
-  function getTextByteLength(value) {
-    try {
-      return new TextEncoder().encode(String(value || "")).length;
-    } catch (error) {
-      return String(value || "").length;
-    }
-  }
-
-  function ensureWebSocketEntry(requestId, url) {
-    const existingId = state.webSocketEntryIdsByRequestId.get(requestId);
-
-    if (existingId) {
-      return getEntryById(existingId);
-    }
-
-    const entry = createWebSocketEntry(requestId, url);
-    state.webSocketEntryIdsByRequestId.set(requestId, entry.id);
-    addEntry(entry);
-    return entry;
-  }
-
   function addEntry(entry) {
     const previousSelectedId = state.selectedId;
     state.entries.unshift(entry);
@@ -759,7 +514,7 @@
 
   function cleanupEntry(entry) {
     if (entry.kind === "websocket") {
-      state.webSocketEntryIdsByRequestId.delete(entry.websocket.requestId);
+      websocketController.cleanupEntry(entry);
     }
   }
 
@@ -822,10 +577,14 @@
     dom.detailView.hidden = false;
     dom.detailMethod.textContent = selected.method;
     dom.detailUrl.textContent = selected.url;
-    dom.detailStatus.textContent = formatEntryStatus(selected);
-    dom.detailType.textContent = formatEntryType(selected);
-    dom.detailDuration.textContent = formatEntryDuration(selected);
+    updateDetailMeta(selected);
     renderActiveTabContent(selected);
+  }
+
+  function updateDetailMeta(entry) {
+    dom.detailStatus.textContent = formatEntryStatus(entry);
+    dom.detailType.textContent = formatEntryType(entry);
+    dom.detailDuration.textContent = formatEntryDuration(entry);
   }
 
   function syncTabsForEntry(entry) {
@@ -901,169 +660,12 @@
 
       return;
     }
-
-    if (activeTab === "overview") {
-      dom.wsOverviewOutput.textContent = getFormattedValue(entry, "wsOverview");
-      return;
-    }
-
-    if (activeTab === "handshake") {
-      dom.wsQueryOutput.textContent = getFormattedValue(entry, "query");
-      dom.wsRequestHeadersOutput.textContent = getFormattedValue(entry, "requestHeaders");
-      dom.wsResponseHeadersOutput.textContent = getFormattedValue(entry, "responseHeaders");
-      return;
-    }
-
-    if (activeTab === "messages") {
-      renderWebSocketMessages(entry);
-      return;
-    }
-
-    if (activeTab === "timing") {
-      dom.wsTimingOutput.textContent = getFormattedValue(entry, "timing");
-    }
-  }
-
-  function renderWebSocketMessages(entry) {
-    const frames = getFilteredWebSocketFrames(entry);
-    const selectedFrame = ensureSelectedWebSocketFrame(entry, frames);
-    const fragment = document.createDocumentFragment();
-
-    dom.wsMessageFilter.value = entry.websocket.frameFilterText;
-    dom.wsMessageSummary.textContent = frames.length === entry.websocket.frames.length
-      ? t("websocketSummaryAll", [frames.length, MAX_WEBSOCKET_FRAMES])
-      : t("websocketSummaryFiltered", [frames.length, entry.websocket.frames.length]);
-
-    if (frames.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "request-formatter-inline-empty";
-      empty.textContent = t("noMatchingMessages");
-      dom.wsMessageList.replaceChildren(empty);
-    } else {
-      frames.forEach(function appendFrame(frame) {
-        fragment.append(createWebSocketFrameItem(frame, entry.websocket.selectedFrameId));
-      });
-      dom.wsMessageList.replaceChildren(fragment);
-    }
-
-    if (!selectedFrame) {
-      dom.wsMessageMeta.textContent = t("noMessageSelected");
-      dom.wsMessageOutput.textContent = t("noMessageSelected");
-      return;
-    }
-
-    dom.wsMessageMeta.textContent = [
-      selectedFrame.direction === "sent" ? "Sent" : "Received",
-      selectedFrame.type,
-      `${selectedFrame.size.toLocaleString()} bytes`,
-      formatTimestamp(selectedFrame.timeMs) || "Unknown time"
-    ].join(" · ");
-    dom.wsMessageOutput.textContent = formatSelectedWebSocketMessage(entry);
-  }
-
-  function getFilteredWebSocketFrames(entry) {
-    const keyword = entry.websocket.frameFilterText.trim().toLowerCase();
-
-    if (!keyword) {
-      return entry.websocket.frames;
-    }
-
-    return entry.websocket.frames.filter(function filterFrame(frame) {
-      return [
-        frame.direction,
-        frame.type,
-        frame.payloadData
-      ].some(function includesKeyword(value) {
-        return String(value || "").toLowerCase().includes(keyword);
-      });
-    });
-  }
-
-  function ensureSelectedWebSocketFrame(entry, filteredFrames) {
-    const frames = Array.isArray(filteredFrames) ? filteredFrames : entry.websocket.frames;
-
-    if (frames.length === 0) {
-      entry.websocket.selectedFrameId = null;
-      return null;
-    }
-
-    const selected = frames.find(function findSelected(frame) {
-      return frame.id === entry.websocket.selectedFrameId;
-    });
-
-    if (selected) {
-      return selected;
-    }
-
-    entry.websocket.selectedFrameId = frames[0].id;
-    return frames[0];
-  }
-
-  function getSelectedWebSocketFrame(entry) {
-    if (entry.kind !== "websocket") {
-      return null;
-    }
-
-    return entry.websocket.frames.find(function findSelectedFrame(frame) {
-      return frame.id === entry.websocket.selectedFrameId;
-    }) || null;
-  }
-
-  function createWebSocketFrameItem(frame, selectedFrameId) {
-    const item = document.createElement("button");
-    item.type = "button";
-    item.className = "request-formatter-message-item";
-    item.dataset.frameId = frame.id;
-
-    if (frame.id === selectedFrameId) {
-      item.classList.add("is-active");
-    }
-
-    item.innerHTML = [
-      '<div class="request-formatter-message-head">',
-      `<span class="request-formatter-message-direction ${frame.direction === "sent" ? "is-sent" : "is-received"}">${escapeHtml(frame.direction === "sent" ? "↑ Sent" : "↓ Received")}</span>`,
-      `<span class="request-formatter-message-size">${escapeHtml(`${frame.type} · ${frame.size.toLocaleString()} bytes`)}</span>`,
-      "</div>",
-      `<p class="request-formatter-message-preview">${escapeHtml(getWebSocketFramePreview(frame))}</p>`
-    ].join("");
-
-    return item;
-  }
-
-  function getWebSocketFramePreview(frame) {
-    if (frame.type === "binary") {
-      return `Binary frame (${frame.size.toLocaleString()} bytes)`;
-    }
-
-    if (frame.type === "ping" || frame.type === "pong" || frame.type === "close") {
-      return frame.payloadData || `${frame.type} frame`;
-    }
-
-    const singleLine = String(frame.payloadData || "").replace(/\s+/g, " ").trim();
-    return singleLine || "Empty payload";
+    websocketController.renderActiveTabContent(entry);
   }
 
   function formatEntryStatus(entry) {
     if (entry.kind === "websocket") {
-      const socket = entry.websocket;
-
-      if (entry.status) {
-        return `${entry.status} ${entry.statusText || ""}`.trim();
-      }
-
-      if (socket.state === "failed") {
-        return "Handshake failed";
-      }
-
-      if (socket.state === "closed") {
-        return "Closed";
-      }
-
-      if (socket.state === "open") {
-        return "Open";
-      }
-
-      return "Connecting";
+      return websocketController.formatEntryStatus(entry);
     }
 
     if (!entry.status) {
@@ -1075,7 +677,7 @@
 
   function formatEntryType(entry) {
     if (entry.kind === "websocket") {
-      return entry.websocket.protocol || WEBSOCKET_DEFAULT_PROTOCOL_LABEL;
+      return websocketController.formatEntryType(entry);
     }
 
     return entry.mimeType || "Unknown type";
@@ -1083,27 +685,10 @@
 
   function formatEntryDuration(entry) {
     if (entry.kind === "websocket") {
-      const duration = getWebSocketDuration(entry);
-      return formatDuration(duration, "Connection time");
+      return websocketController.formatEntryDuration(entry);
     }
 
     return formatDuration(entry.duration, "Unknown time");
-  }
-
-  function getWebSocketDuration(entry) {
-    const socket = entry.websocket;
-    const startMs = socket.connectedAtMs || socket.createdAtMs;
-    const endMs = socket.closedAtMs || socket.lastEventAtMs || null;
-
-    if (!startMs) {
-      return null;
-    }
-
-    if (endMs) {
-      return Math.max(0, endMs - startMs);
-    }
-
-    return Math.max(0, Date.now() - startMs);
   }
 
   function formatDuration(duration, fallback) {
@@ -1146,17 +731,7 @@
 
   function matchesEntryFilter(entry, keyword) {
     if (entry.kind === "websocket") {
-      return [
-        entry.method,
-        entry.url,
-        String(entry.status),
-        entry.statusText,
-        entry.websocket.state,
-        entry.websocket.protocol,
-        entry.websocket.errorText
-      ].some(function includesKeyword(value) {
-        return String(value || "").toLowerCase().includes(keyword);
-      });
+      return websocketController.matchesEntryFilter(entry, keyword);
     }
 
     return [
@@ -1191,16 +766,7 @@
     }
 
     if (entry.kind === "websocket") {
-      item.innerHTML = [
-        '<div class="request-formatter-item-main">',
-        '<span class="request-formatter-item-method is-websocket">WS</span>',
-        `<span class="request-formatter-item-url">${escapeHtml(shortenUrl(entry.url))}</span>`,
-        "</div>",
-        '<div class="request-formatter-item-sub">',
-        `<span>${escapeHtml(formatWebSocketListStatus(entry))}</span>`,
-        `<span>${escapeHtml(formatWebSocketListSummary(entry))}</span>`,
-        "</div>"
-      ].join("");
+      item.innerHTML = websocketController.createListItemContent(entry);
 
       return item;
     }
@@ -1217,24 +783,6 @@
     ].join("");
 
     return item;
-  }
-
-  function formatWebSocketListStatus(entry) {
-    if (entry.status) {
-      return formatEntryStatus(entry);
-    }
-
-    return entry.websocket.state === "open"
-      ? "Open"
-      : entry.websocket.state === "closed"
-        ? "Closed"
-        : entry.websocket.state === "failed"
-          ? "Failed"
-          : "Connecting";
-  }
-
-  function formatWebSocketListSummary(entry) {
-    return `↑ ${entry.websocket.sentCount} / ↓ ${entry.websocket.receivedCount}`;
   }
 
   function renderEmptyListState() {
@@ -1286,6 +834,10 @@
     refreshListItem(entry);
 
     if (state.selectedId === entry.id) {
+      if (entry.kind === "websocket" && websocketController.handleSelectedEntryRefresh(entry)) {
+        return;
+      }
+
       renderDetail();
     }
   }
@@ -1344,18 +896,14 @@
 
   function bindEvents() {
     dom.captureToggle.addEventListener("change", function updateCapture(event) {
-        state.captureEnabled = event.target.checked;
-      });
-
-      dom.websocketToggle.addEventListener("change", function updateWebSocketCapture(event) {
-        updateWebSocketCaptureState(event.target.checked).catch(function ignoreError() {});
+      state.captureEnabled = event.target.checked;
     });
 
     dom.clearButton.addEventListener("click", function clearEntries() {
+      websocketController.clearState();
       state.entries.forEach(cleanupEntry);
       state.entries = [];
       state.selectedId = null;
-      state.webSocketEntryIdsByRequestId.clear();
       render();
     });
 
@@ -1394,33 +942,7 @@
         copyFormattedValue(copyButton);
       });
     });
-
-    dom.wsMessageFilter.addEventListener("input", function filterFrames(event) {
-      const selected = getSelectedEntry();
-
-      if (!selected || selected.kind !== "websocket") {
-        return;
-      }
-
-      selected.websocket.frameFilterText = event.target.value;
-      renderWebSocketMessages(selected);
-    });
-
-    dom.wsMessageList.addEventListener("click", function selectFrame(event) {
-      const selected = getSelectedEntry();
-      const item = event.target.closest("[data-frame-id]");
-
-      if (!selected || selected.kind !== "websocket" || !item) {
-        return;
-      }
-
-      selected.websocket.selectedFrameId = item.dataset.frameId;
-      renderWebSocketMessages(selected);
-    });
-
-    window.addEventListener("beforeunload", function cleanupCapture() {
-      detachWebSocketDebugger({ silent: true }).catch(function ignoreError() {});
-    });
+    websocketController.bindUiEvents();
   }
 
   function copyFormattedValue(button) {
@@ -1473,11 +995,11 @@
       return;
     }
 
-    bindDebuggerEvents();
+    websocketController.bindDebuggerEvents();
 
     if (!state.httpCaptureBound) {
       chrome.devtools.network.onRequestFinished.addListener(function onRequestFinished(request) {
-        if (!state.captureEnabled || isWebSocketHandshakeRequest(request)) {
+        if (!state.captureEnabled || websocketController.isHandshakeRequest(request)) {
           return;
         }
 
@@ -1492,335 +1014,7 @@
       state.httpCaptureBound = true;
     }
 
-      setCaptureStatus("");
-  }
-
-  function bindDebuggerEvents() {
-    if (state.debuggerEventsBound || !window.chrome?.debugger?.onEvent) {
-      return;
-    }
-
-    chrome.debugger.onEvent.addListener(handleDebuggerEvent);
-    chrome.debugger.onDetach.addListener(handleDebuggerDetach);
-    state.debuggerEventsBound = true;
-  }
-
-    function syncWebSocketToggle(checked) {
-      state.webSocketCaptureEnabled = checked;
-      dom.websocketToggle.checked = checked;
-    }
-
-    async function updateWebSocketCaptureState(enabled) {
-      syncWebSocketToggle(enabled);
-
-      if (!enabled) {
-        await detachWebSocketDebugger();
-        setCaptureStatus("");
-        return;
-      }
-
-      if (!window.chrome?.debugger) {
-        syncWebSocketToggle(false);
-        setCaptureStatus(t("websocketUnavailable"));
-        return;
-      }
-
-      await ensureWebSocketDebuggerAttached();
-  }
-
-  async function ensureWebSocketDebuggerAttached() {
-      if (
-        !state.webSocketCaptureEnabled ||
-        state.debuggerAttached ||
-        state.debuggerPending ||
-        !Number.isInteger(state.inspectedTabId)
-      ) {
-      return;
-    }
-
-    state.debuggerPending = true;
-
-    try {
-      await attachDebugger({ tabId: state.inspectedTabId });
-      await sendDebuggerCommand("Network.enable");
-      state.debuggerAttached = true;
-      setCaptureStatus(t("websocketEnabled"));
-    } catch (error) {
-      state.debuggerAttached = false;
-        syncWebSocketToggle(false);
-      setCaptureStatus(t("websocketEnableFailed", error.message));
-    } finally {
-      state.debuggerPending = false;
-    }
-  }
-
-  async function detachWebSocketDebugger(options) {
-    const silent = Boolean(options?.silent);
-
-    if (!state.debuggerAttached || !Number.isInteger(state.inspectedTabId) || !window.chrome?.debugger) {
-      state.debuggerAttached = false;
-      state.debuggerPending = false;
-        if (!silent && state.webSocketCaptureEnabled) {
-          setCaptureStatus(t("websocketNotConnected"));
-      }
-      return;
-    }
-
-    try {
-      await detachDebugger({ tabId: state.inspectedTabId });
-    } catch (error) {
-      // Ignore detach failures during cleanup.
-    }
-
-    state.debuggerAttached = false;
-    state.debuggerPending = false;
-
-    if (!silent) {
-        setCaptureStatus(t("websocketDisconnected"));
-    }
-  }
-
-  function handleDebuggerEvent(source, method, params) {
-      if (!state.webSocketCaptureEnabled || source.tabId !== state.inspectedTabId) {
-      return;
-    }
-
-    if (method === "Network.webSocketCreated") {
-      handleWebSocketCreated(params);
-      return;
-    }
-
-    if (method === "Network.webSocketWillSendHandshakeRequest") {
-      handleWebSocketHandshakeRequest(params);
-      return;
-    }
-
-    if (method === "Network.webSocketHandshakeResponseReceived") {
-      handleWebSocketHandshakeResponse(params);
-      return;
-    }
-
-    if (method === "Network.webSocketFrameSent") {
-      handleWebSocketFrame(params, "sent");
-      return;
-    }
-
-    if (method === "Network.webSocketFrameReceived") {
-      handleWebSocketFrame(params, "received");
-      return;
-    }
-
-    if (method === "Network.webSocketClosed") {
-      handleWebSocketClosed(params);
-      return;
-    }
-
-    if (method === "Network.webSocketFrameError") {
-      handleWebSocketFrameError(params);
-    }
-  }
-
-  function handleDebuggerDetach(source, reason) {
-    if (source.tabId !== state.inspectedTabId) {
-      return;
-    }
-
-    state.debuggerAttached = false;
-    state.debuggerPending = false;
-      syncWebSocketToggle(false);
-    setCaptureStatus(t("websocketDisconnectedWithReason", reason));
-  }
-
-  function handleWebSocketCreated(params) {
-    const entry = ensureWebSocketEntry(params.requestId, params.url);
-
-    entry.url = params.url || entry.url;
-    entry.queryString = parseQueryString(entry.url);
-    resetFormattedCache(entry);
-    refreshEntry(entry);
-  }
-
-  function handleWebSocketHandshakeRequest(params) {
-    const entry = ensureWebSocketEntry(params.requestId, params.request?.url);
-    const requestHeaders = headerPairsFromObject(params.request?.headers);
-    const createdAtMs = resolveEventTimeMs(entry, params.timestamp, params.wallTime) || Date.now();
-
-    initializeWebSocketTimeOrigin(entry, params.timestamp, params.wallTime);
-    entry.url = params.request?.url || entry.url;
-    entry.queryString = parseQueryString(entry.url);
-    entry.requestHeaders = requestHeaders;
-    entry.startedDateTime = formatTimestamp(createdAtMs) || entry.startedDateTime;
-    entry.websocket.createdAtMs = createdAtMs;
-    entry.websocket.lastEventAtMs = createdAtMs;
-    entry.websocket.state = "connecting";
-    resetFormattedCache(entry);
-    refreshEntry(entry);
-  }
-
-  function handleWebSocketHandshakeResponse(params) {
-    const entry = ensureWebSocketEntry(params.requestId, "");
-    const responseHeaders = headerPairsFromObject(params.response?.headers);
-    const connectedAtMs = resolveEventTimeMs(entry, params.timestamp, null) || Date.now();
-
-    entry.status = params.response?.status || entry.status;
-    entry.statusText = params.response?.statusText || entry.statusText;
-    entry.responseHeaders = responseHeaders;
-    entry.websocket.protocol = getHeaderValue(responseHeaders, "sec-websocket-protocol");
-    entry.websocket.extensions = getHeaderValue(responseHeaders, "sec-websocket-extensions");
-    entry.websocket.connectedAtMs = connectedAtMs;
-    entry.websocket.lastEventAtMs = connectedAtMs;
-    entry.websocket.state = entry.status === 101 ? "open" : "failed";
-    resetFormattedCache(entry);
-    refreshEntry(entry);
-  }
-
-  function handleWebSocketFrame(params, direction) {
-    const entry = ensureWebSocketEntry(params.requestId, "");
-    const frame = createWebSocketFrame(entry, direction, params.response, params.timestamp);
-
-    entry.websocket.frames.unshift(frame);
-    entry.websocket.frames = entry.websocket.frames.slice(0, MAX_WEBSOCKET_FRAMES);
-    entry.websocket.lastEventAtMs = frame.timeMs;
-
-    if (direction === "sent") {
-      entry.websocket.sentCount += 1;
-    } else {
-      entry.websocket.receivedCount += 1;
-    }
-
-    if (entry.websocket.state === "connecting") {
-      entry.websocket.state = "open";
-    }
-
-    if (!entry.websocket.selectedFrameId) {
-      entry.websocket.selectedFrameId = frame.id;
-    }
-
-    resetFormattedCache(entry);
-    refreshEntry(entry);
-  }
-
-  function handleWebSocketClosed(params) {
-    const entry = ensureWebSocketEntry(params.requestId, "");
-    const closedAtMs = resolveEventTimeMs(entry, params.timestamp, null) || Date.now();
-
-    entry.websocket.closedAtMs = closedAtMs;
-    entry.websocket.lastEventAtMs = closedAtMs;
-    entry.websocket.state = entry.websocket.errorText ? "failed" : "closed";
-    resetFormattedCache(entry);
-    refreshEntry(entry);
-  }
-
-  function handleWebSocketFrameError(params) {
-    const entry = ensureWebSocketEntry(params.requestId, "");
-
-    entry.websocket.errorText = params.errorMessage || "Unknown WebSocket error";
-    entry.websocket.state = "failed";
-    entry.websocket.lastEventAtMs = Date.now();
-    resetFormattedCache(entry);
-    refreshEntry(entry);
-  }
-
-  function initializeWebSocketTimeOrigin(entry, timestamp, wallTime) {
-    if (
-      typeof timestamp === "number" &&
-      Number.isFinite(timestamp) &&
-      entry.websocket.timeOriginTimestamp === null
-    ) {
-      entry.websocket.timeOriginTimestamp = timestamp;
-    }
-
-    if (
-      typeof wallTime === "number" &&
-      Number.isFinite(wallTime) &&
-      entry.websocket.timeOriginWallTimeMs === null
-    ) {
-      entry.websocket.timeOriginWallTimeMs = wallTime * 1000;
-    }
-  }
-
-  function resolveEventTimeMs(entry, timestamp, wallTime) {
-    if (typeof wallTime === "number" && Number.isFinite(wallTime)) {
-      return wallTime * 1000;
-    }
-
-    if (
-      typeof timestamp === "number" &&
-      Number.isFinite(timestamp) &&
-      typeof entry.websocket?.timeOriginTimestamp === "number" &&
-      typeof entry.websocket?.timeOriginWallTimeMs === "number"
-    ) {
-      return entry.websocket.timeOriginWallTimeMs + (timestamp - entry.websocket.timeOriginTimestamp) * 1000;
-    }
-
-    return null;
-  }
-
-  function isWebSocketHandshakeRequest(request) {
-    const har = request || {};
-    const requestUrl = String(har.request?.url || "");
-    const requestHeaders = har.request?.headers || [];
-    const responseHeaders = har.response?.headers || [];
-    const upgradeRequest = getHeaderValue(requestHeaders, "upgrade");
-    const upgradeResponse = getHeaderValue(responseHeaders, "upgrade");
-
-    return (
-      requestUrl.startsWith("ws://") ||
-      requestUrl.startsWith("wss://") ||
-      String(upgradeRequest).toLowerCase() === "websocket" ||
-      String(upgradeResponse).toLowerCase() === "websocket" ||
-      har.response?.status === 101
-    );
-  }
-
-  function attachDebugger(debuggee) {
-    return new Promise(function attachPromise(resolve, reject) {
-      chrome.debugger.attach(debuggee, DEBUGGER_PROTOCOL_VERSION, function onAttach() {
-        const error = chrome.runtime?.lastError;
-
-        if (error) {
-          reject(new Error(error.message));
-          return;
-        }
-
-        resolve();
-      });
-    });
-  }
-
-  function detachDebugger(debuggee) {
-    return new Promise(function detachPromise(resolve, reject) {
-      chrome.debugger.detach(debuggee, function onDetach() {
-        const error = chrome.runtime?.lastError;
-
-        if (error) {
-          reject(new Error(error.message));
-          return;
-        }
-
-        resolve();
-      });
-    });
-  }
-
-  function sendDebuggerCommand(method, commandParams) {
-    return new Promise(function sendCommandPromise(resolve, reject) {
-      chrome.debugger.sendCommand(
-        { tabId: state.inspectedTabId },
-        method,
-        commandParams || {},
-        function onCommand(result) {
-          const error = chrome.runtime?.lastError;
-
-          if (error) {
-            reject(new Error(error.message));
-            return;
-          }
-
-          resolve(result);
-        }
-      );
-    });
+    setCaptureStatus("");
   }
 
   applyStaticI18n();
