@@ -27,6 +27,14 @@
       en: "Open Network requests on the current page, and formatted request, response, and WebSocket data will appear here.",
       zh_CN: "打开当前页面的 Network 请求后，这里会展示可格式化的 request、response 与 WebSocket 数据。"
     },
+    narrowViewportTitle: {
+      en: "Window too narrow",
+      zh_CN: "当前窗口过窄"
+    },
+    narrowViewportDescription: {
+      en: "Please widen the DevTools window before using Request Formatter.",
+      zh_CN: "请先将 DevTools 窗口拉宽后再使用 Request Formatter。"
+    },
     copyButton: {
       en: "Copy",
       zh_CN: "复制"

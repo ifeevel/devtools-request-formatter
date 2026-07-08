@@ -20,6 +20,12 @@
   "emptyStateDescription": {
     "message": "打开当前页面的 Network 请求后，这里会展示可格式化的 request、response 与 WebSocket 数据。"
   },
+  "narrowViewportTitle": {
+    "message": "当前窗口过窄"
+  },
+  "narrowViewportDescription": {
+    "message": "请先将 DevTools 窗口拉宽后再使用 Request Formatter。"
+  },
   "copyButton": {
     "message": "复制"
   },

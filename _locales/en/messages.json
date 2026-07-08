@@ -20,6 +20,12 @@
   "emptyStateDescription": {
     "message": "Open Network requests on the current page, and formatted request, response, and WebSocket data will appear here."
   },
+  "narrowViewportTitle": {
+    "message": "Window too narrow"
+  },
+  "narrowViewportDescription": {
+    "message": "Please widen the DevTools window before using Request Formatter."
+  },
   "copyButton": {
     "message": "Copy"
   },

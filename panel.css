@@ -54,6 +54,10 @@ body {
   font-size: 0.8125rem;
 }
 
+.request-formatter-narrow-state {
+  display: none;
+}
+
 button,
 input {
   font: inherit;
@@ -469,15 +473,37 @@ pre {
 
 @media (max-width: 46rem) {
   .request-formatter-shell {
-    grid-template-columns: 1fr;
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
+    display: none;
   }
 
-  .request-formatter-sidebar {
-    min-height: 18rem;
-    border-right: 0;
-    border-bottom: 0.0625rem solid var(--rf-border);
+  .request-formatter-narrow-state {
+    display: grid;
+    position: fixed;
+    inset: 0;
+    place-items: center;
+    padding: 1.5rem;
+  }
+
+  .request-formatter-narrow-card {
+    width: 100%;
+    max-width: 28rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+    border: 0.0625rem solid var(--rf-border);
+    border-radius: 1rem;
+    background: var(--rf-surface);
+    text-align: center;
+  }
+
+  .request-formatter-narrow-card h1 {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+
+  .request-formatter-narrow-card p {
+    margin: 0.75rem 0 0;
+    color: var(--rf-text-muted);
+    line-height: 1.6;
   }
 }
