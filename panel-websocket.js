@@ -170,6 +170,10 @@ export function createController(deps) {
         return "No message selected";
       }
 
+      if (options?.forCopy) {
+        return frame.payloadData || "";
+      }
+
       const payload = formatFramePayload(frame, options);
 
       return [
@@ -185,7 +189,7 @@ export function createController(deps) {
 
     function formatFramePayload(frame, options) {
       if (frame.type === "binary") {
-        return `Binary frame (${frame.size.toLocaleString()} bytes). Raw payload decoding is not supported in v1.`;
+        return t("websocketBinaryPayloadUnsupported", frame.size.toLocaleString());
       }
 
       if (frame.type === "ping" || frame.type === "pong" || frame.type === "close") {
@@ -195,7 +199,7 @@ export function createController(deps) {
       return formatPayload(
         frame.payloadData,
         frame.type === "json" ? "application/json" : "text/plain",
-          { ...options, preserveWhitespace: true }
+        { ...options, preserveWhitespace: true, t }
       );
     }
 
@@ -239,8 +243,10 @@ export function createController(deps) {
     }
 
     function renderMessageSummary(entry, filteredCount) {
+      const capturedCount = entry.websocket.sentCount + entry.websocket.receivedCount;
+
       dom.wsMessageSummary.textContent = filteredCount === entry.websocket.frames.length
-        ? t("websocketSummaryAll", [filteredCount, MAX_WEBSOCKET_FRAMES])
+        ? t("websocketSummaryAll", [capturedCount, MAX_WEBSOCKET_FRAMES])
         : t("websocketSummaryFiltered", [filteredCount, entry.websocket.frames.length]);
     }
 
@@ -529,7 +535,7 @@ export function createController(deps) {
       item.innerHTML = [
         '<div class="request-formatter-message-head">',
         `<span class="request-formatter-message-direction ${frame.direction === "sent" ? "is-sent" : "is-received"}">${escapeHtml(frame.direction === "sent" ? "↑ Sent" : "↓ Received")}</span>`,
-        `<span class="request-formatter-message-size">${escapeHtml(`${frame.type} · ${frame.size.toLocaleString()} bytes`)}</span>`,
+        `<span class="request-formatter-message-size">${escapeHtml(`${formatTimestamp(frame.timeMs) || "Unknown time"} · ${frame.type} · ${frame.size.toLocaleString()} bytes`)}</span>`,
         "</div>",
         `<p class="request-formatter-message-preview">${escapeHtml(getFramePreview(frame))}</p>`
       ].join("");

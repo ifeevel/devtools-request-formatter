@@ -53,8 +53,18 @@ export function formatPayload(text, mimeType, options) {
 
   if (previewMode && source.length > LARGE_PAYLOAD_CHAR_LIMIT) {
     return [
-      `[Preview only] Payload is too large to fully format in the panel (${source.length.toLocaleString()} chars).`,
-      `Only the first ${PAYLOAD_PREVIEW_CHAR_LIMIT.toLocaleString()} chars are shown to keep the UI responsive.`,
+      translateOption(
+        options,
+        "payloadPreviewOnlyTitle",
+        source.length.toLocaleString(),
+        `[Preview only] Payload is too large to fully format in the panel (${source.length.toLocaleString()} chars).`
+      ),
+      translateOption(
+        options,
+        "payloadPreviewOnlyDescription",
+        PAYLOAD_PREVIEW_CHAR_LIMIT.toLocaleString(),
+        `Only the first ${PAYLOAD_PREVIEW_CHAR_LIMIT.toLocaleString()} chars are shown to keep the UI responsive.`
+      ),
       "",
       source.slice(0, PAYLOAD_PREVIEW_CHAR_LIMIT)
     ].join("\n");
@@ -72,6 +82,10 @@ export function formatPayload(text, mimeType, options) {
   }
 
   return source;
+}
+
+function translateOption(options, key, substitutions, fallback) {
+  return typeof options?.t === "function" ? options.t(key, substitutions) : fallback;
 }
 
 export function formatDuration(duration, fallback) {

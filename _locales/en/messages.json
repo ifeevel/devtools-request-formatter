@@ -41,6 +41,42 @@
   "messageFilterPlaceholder": {
     "message": "Filter by message content"
   },
+  "responseContentNotLoaded": {
+    "message": "Response content is not loaded yet. Select the Response tab to load it."
+  },
+  "responseContentUnavailable": {
+    "message": "Response content is unavailable. Keep DevTools open and preserve the Network log when needed."
+  },
+  "responseBase64Title": {
+    "message": "[Base64 encoded response]"
+  },
+  "responseBase64Description": {
+    "message": "Chrome returned this response as base64. Decode it externally if it is binary data."
+  },
+  "payloadPreviewOnlyTitle": {
+    "message": "[Preview only] Payload is too large to fully format in the panel ($count$ chars).",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "payloadPreviewOnlyDescription": {
+    "message": "Only the first $count$ chars are shown to keep the UI responsive.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "websocketBinaryPayloadUnsupported": {
+    "message": "Binary frame ($size$ bytes). Raw payload decoding is not supported. You can still copy the raw payload.",
+    "placeholders": {
+      "size": {
+        "content": "$1"
+      }
+    }
+  },
   "websocketSummaryAll": {
     "message": "$count$ messages. Keeping the latest $limit$ at most.",
     "placeholders": {
