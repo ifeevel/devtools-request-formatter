@@ -189,7 +189,7 @@ export function createController(deps) {
 
     function formatFramePayload(frame, options) {
       if (frame.type === "binary") {
-        return `Binary frame (${frame.size.toLocaleString()} bytes). Raw payload decoding is not supported in v1.`;
+        return t("websocketBinaryPayloadUnsupported", frame.size.toLocaleString());
       }
 
       if (frame.type === "ping" || frame.type === "pong" || frame.type === "close") {

@@ -41,6 +41,14 @@
   "messageFilterPlaceholder": {
     "message": "Filter by message content"
   },
+  "websocketBinaryPayloadUnsupported": {
+    "message": "Binary frame ($size$ bytes). Raw payload decoding is not supported in v1. You can still copy the raw payload.",
+    "placeholders": {
+      "size": {
+        "content": "$1"
+      }
+    }
+  },
   "websocketSummaryAll": {
     "message": "$count$ messages. Keeping the latest $limit$ at most.",
     "placeholders": {

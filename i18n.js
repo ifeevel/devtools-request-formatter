@@ -47,6 +47,10 @@ const FALLBACK_MESSAGES = {
     en: "Filter by message content",
     zh_CN: "按消息内容过滤"
   },
+  websocketBinaryPayloadUnsupported: {
+    en: "Binary frame ($1 bytes). Raw payload decoding is not supported in v1. You can still copy the raw payload.",
+    zh_CN: "Binary frame（$1 bytes）。v1 暂不支持解析原始 payload，但仍可复制原始内容。"
+  },
   websocketSummaryAll: {
     en: "$1 messages. Keeping the latest $2 at most.",
     zh_CN: "共 $1 条消息，最多保留最近 $2 条。"

@@ -41,6 +41,14 @@
   "messageFilterPlaceholder": {
     "message": "按消息内容过滤"
   },
+  "websocketBinaryPayloadUnsupported": {
+    "message": "Binary frame（$size$ bytes）。v1 暂不支持解析原始 payload，但仍可复制原始内容。",
+    "placeholders": {
+      "size": {
+        "content": "$1"
+      }
+    }
+  },
   "websocketSummaryAll": {
     "message": "共 $count$ 条消息，最多保留最近 $limit$ 条。",
     "placeholders": {
