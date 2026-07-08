@@ -88,6 +88,9 @@ import {
   function createHttpEntry(request) {
     const har = request || {};
     const response = har.response || {};
+    const loadResponseContent = typeof request?.getContent === "function"
+      ? request.getContent.bind(request)
+      : null;
 
     return {
       id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -104,7 +107,8 @@ import {
       responseHeaders: response.headers || [],
       responseContent: "",
       responseEncoding: "",
-      responseLoadState: "loading",
+      responseLoadState: loadResponseContent ? "idle" : "unavailable",
+      responseContentLoader: loadResponseContent,
       timings: har.timings || {},
       queryString: har.request?.queryString || [],
       formattedPreviewCache: {},
@@ -184,6 +188,10 @@ import {
   }
 
   function formatResponseBody(entry, options) {
+    if (entry.responseLoadState === "idle") {
+      return "Response content is not loaded yet. Select the Response tab to load it.";
+    }
+
     if (entry.responseLoadState === "loading") {
       return "Loading response content...";
     }
@@ -270,7 +278,10 @@ import {
   function cleanupEntry(entry) {
     if (entry.kind === "websocket") {
       websocketController.cleanupEntry(entry);
+      return;
     }
+
+    entry.responseContentLoader = null;
   }
 
   function updateHttpEntryContent(id, content, encoding, isUnavailable) {
@@ -285,6 +296,25 @@ import {
     entry.responseLoadState = isUnavailable ? "unavailable" : "loaded";
     resetFormattedCache(entry);
     refreshEntry(entry);
+  }
+
+  function ensureResponseContentLoaded(entry) {
+    if (
+      !entry ||
+      entry.kind !== "http" ||
+      entry.responseLoadState !== "idle" ||
+      typeof entry.responseContentLoader !== "function"
+    ) {
+      return;
+    }
+
+    entry.responseLoadState = "loading";
+    resetFormattedCache(entry);
+
+    entry.responseContentLoader(function handleContent(content, encoding) {
+      const isUnavailable = Boolean(chrome.runtime?.lastError);
+      updateHttpEntryContent(entry.id, content, encoding, isUnavailable);
+    });
   }
 
   function getEntryById(id) {
@@ -383,6 +413,7 @@ import {
 
     if (entry.kind === "http") {
       if (activeTab === "all") {
+        ensureResponseContentLoaded(entry);
         dom.allQueryOutput.textContent = getFormattedValue(entry, "query");
         dom.allRequestHeadersOutput.textContent = getFormattedValue(entry, "requestHeaders");
         dom.allRequestBodyOutput.textContent = getFormattedValue(entry, "requestBody");
@@ -404,6 +435,7 @@ import {
       }
 
       if (activeTab === "response") {
+        ensureResponseContentLoaded(entry);
         dom.responseHeadersOutput.textContent = getFormattedValue(entry, "responseHeaders");
         dom.responseBodyOutput.textContent = getFormattedValue(entry, "responseBody");
         return;
@@ -722,11 +754,6 @@ import {
 
         const entry = createHttpEntry(request);
         addEntry(entry);
-
-        request.getContent(function handleContent(content, encoding) {
-          const isUnavailable = Boolean(chrome.runtime?.lastError);
-          updateHttpEntryContent(entry.id, content, encoding, isUnavailable);
-        });
       });
       state.httpCaptureBound = true;
     }
