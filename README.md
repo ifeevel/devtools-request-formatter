@@ -23,6 +23,7 @@
 - 自动美化 `JSON` 与 `application/x-www-form-urlencoded` 数据
 - 支持查看 `WebSocket` 握手信息、连接状态、消息列表与消息详情
 - 自动格式化 `WebSocket` 文本帧中的 `JSON` 消息
+- 自动跟随 DevTools 独立主题切换，并在不支持时降级跟随系统主题
 - 支持过滤请求、暂停捕获、清空列表、复制格式化结果
 
 ## 项目结构
@@ -43,6 +44,7 @@ devtools-request-formatter/
 ├── panel.html
 ├── panel.js
 ├── panel-websocket.js
+├── theme.js
 ├── LICENSE
 ├── README.md
 └── README.EN.md
