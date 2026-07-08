@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --rf-bg: #ffffff;
   --rf-surface: #ffffff;
   --rf-surface-muted: rgba(15, 23, 42, 0.06);
@@ -16,20 +16,19 @@
     sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --rf-bg: #1a1a1a;
-    --rf-surface: #1a1a1a;
-    --rf-surface-muted: rgba(0, 0, 0, 0.18);
-    --rf-text: #f3f4f6;
-    --rf-text-muted: #9ca3af;
-    --rf-border: rgba(255, 255, 255, 0.1);
-    --rf-accent: #007aff;
-    --rf-accent-soft: rgba(0, 122, 255, 0.16);
-    --rf-danger: #fb923c;
-    --rf-websocket-accent: #5eead4;
-    --rf-shadow: none;
-  }
+:root[data-devtools-theme="dark"] {
+  color-scheme: dark;
+  --rf-bg: #1a1a1a;
+  --rf-surface: #1a1a1a;
+  --rf-surface-muted: rgba(0, 0, 0, 0.18);
+  --rf-text: #f3f4f6;
+  --rf-text-muted: #9ca3af;
+  --rf-border: rgba(255, 255, 255, 0.1);
+  --rf-accent: #007aff;
+  --rf-accent-soft: rgba(0, 122, 255, 0.16);
+  --rf-danger: #fb923c;
+  --rf-websocket-accent: #5eead4;
+  --rf-shadow: none;
 }
 
 * {

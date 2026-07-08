@@ -23,6 +23,7 @@ FILES=(
   panel.js
   panel-websocket.js
   panel.css
+  theme.js
 )
 
 if [[ -d "$ROOT_DIR/assets/icons" ]]; then
