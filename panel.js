@@ -6,6 +6,104 @@
   const DEBUGGER_PROTOCOL_VERSION = "1.3";
   const WEBSOCKET_MIME_TYPE = "WebSocket";
   const WEBSOCKET_DEFAULT_PROTOCOL_LABEL = "WebSocket";
+  const FALLBACK_MESSAGES = {
+    appDescription: {
+      en: "Format DevTools Network requests, responses, and WebSocket messages",
+      zh_CN: "格式化 DevTools Network 请求、响应与 WebSocket 消息"
+    },
+    requestFilterPlaceholder: {
+      en: "Filter by URL, method, or status",
+      zh_CN: "按 URL、方法、状态过滤"
+    },
+    clearButton: {
+      en: "Clear",
+      zh_CN: "清空"
+    },
+    emptyStateTitle: {
+      en: "Waiting for requests",
+      zh_CN: "等待请求"
+    },
+    emptyStateDescription: {
+      en: "Open Network requests on the current page, and formatted request, response, and WebSocket data will appear here.",
+      zh_CN: "打开当前页面的 Network 请求后，这里会展示可格式化的 request、response 与 WebSocket 数据。"
+    },
+    narrowViewportTitle: {
+      en: "Window too narrow",
+      zh_CN: "当前窗口过窄"
+    },
+    narrowViewportDescription: {
+      en: "Please widen the DevTools window before using Request Formatter.",
+      zh_CN: "请先将 DevTools 窗口拉宽后再使用 Request Formatter。"
+    },
+    copyButton: {
+      en: "Copy",
+      zh_CN: "复制"
+    },
+    copyCurrentMessageButton: {
+      en: "Copy current message",
+      zh_CN: "复制当前消息"
+    },
+    copiedButton: {
+      en: "Copied",
+      zh_CN: "已复制"
+    },
+    copyFailedButton: {
+      en: "Copy failed",
+      zh_CN: "复制失败"
+    },
+    messageFilterPlaceholder: {
+      en: "Filter by message content",
+      zh_CN: "按消息内容过滤"
+    },
+    websocketSummaryAll: {
+      en: "$1 messages. Keeping the latest $2 at most.",
+      zh_CN: "共 $1 条消息，最多保留最近 $2 条。"
+    },
+    websocketSummaryFiltered: {
+      en: "$1 after filtering. $2 total.",
+      zh_CN: "过滤后 $1 条，原始共 $2 条。"
+    },
+    noMatchingMessages: {
+      en: "No matching messages",
+      zh_CN: "暂无匹配消息"
+    },
+    noMessageSelected: {
+      en: "No message selected",
+      zh_CN: "未选中消息"
+    },
+    noMatchingRequests: {
+      en: "No matching requests",
+      zh_CN: "暂无匹配请求"
+    },
+    devtoolsUnavailable: {
+      en: "The current page is not running in a Chrome DevTools Extension environment. Load the unpacked extension and open DevTools to use it.",
+      zh_CN: "当前页面不在 Chrome DevTools Extension 环境中，请以未打包扩展加载后打开 DevTools 使用。"
+    },
+    websocketUnavailable: {
+      en: "WebSocket message capture cannot be enabled in the current environment.",
+      zh_CN: "当前环境无法启用 WebSocket 消息捕获。"
+    },
+    websocketEnabled: {
+      en: "WebSocket message capture is enabled. Chrome may show a debugging notice at the top of the page.",
+      zh_CN: "WebSocket 消息捕获已启用。Chrome 可能会在页面顶部显示调试提示。"
+    },
+    websocketEnableFailed: {
+      en: "Failed to enable WebSocket message capture: $1",
+      zh_CN: "WebSocket 消息捕获启用失败：$1"
+    },
+    websocketNotConnected: {
+      en: "WebSocket debugging is not connected.",
+      zh_CN: "WebSocket 调试未处于连接状态。"
+    },
+    websocketDisconnected: {
+      en: "WebSocket debugging connection disconnected.",
+      zh_CN: "WebSocket 调试连接已断开。"
+    },
+    websocketDisconnectedWithReason: {
+      en: "WebSocket debugging connection disconnected: $1",
+      zh_CN: "WebSocket 调试连接已断开：$1"
+    }
+  };
   const state = {
     entries: [],
     selectedId: null,
@@ -65,6 +163,49 @@
     wsResponseHeadersOutput: document.getElementById("ws-response-headers-output"),
     wsTimingOutput: document.getElementById("ws-timing-output")
   };
+
+  function getFallbackLocale() {
+    const locale = window.chrome?.i18n?.getUILanguage?.() || navigator.language || "en";
+    return locale.toLowerCase().startsWith("zh") ? "zh_CN" : "en";
+  }
+
+  function t(key, substitutions) {
+    const values = Array.isArray(substitutions)
+      ? substitutions.map(String)
+      : substitutions === undefined
+        ? []
+        : [String(substitutions)];
+    const message = window.chrome?.i18n?.getMessage?.(key, values);
+
+    if (message) {
+      return message;
+    }
+
+    const fallback = FALLBACK_MESSAGES[key]?.[getFallbackLocale()] || FALLBACK_MESSAGES[key]?.en || key;
+    return values.reduce(function replaceSubstitution(result, value, index) {
+      return result.replaceAll(`$${index + 1}`, value);
+    }, fallback);
+  }
+
+  function applyStaticI18n() {
+    document.documentElement.lang = getFallbackLocale() === "zh_CN" ? "zh-CN" : "en";
+
+    document.querySelectorAll("[data-i18n]").forEach(function translateText(element) {
+      element.textContent = t(element.dataset.i18n);
+    });
+
+    document.querySelectorAll("[data-i18n-attrs]").forEach(function translateAttributes(element) {
+      element.dataset.i18nAttrs.split(",").forEach(function translateAttribute(pair) {
+        const parts = pair.split(":");
+        const attribute = parts[0]?.trim();
+        const key = parts[1]?.trim();
+
+        if (attribute && key) {
+          element.setAttribute(attribute, t(key));
+        }
+      });
+    });
+  }
 
   function createHttpEntry(request) {
     const har = request || {};
@@ -790,13 +931,13 @@
 
     dom.wsMessageFilter.value = entry.websocket.frameFilterText;
     dom.wsMessageSummary.textContent = frames.length === entry.websocket.frames.length
-      ? `共 ${frames.length} 条消息，最多保留最近 ${MAX_WEBSOCKET_FRAMES} 条。`
-      : `过滤后 ${frames.length} 条，原始共 ${entry.websocket.frames.length} 条。`;
+      ? t("websocketSummaryAll", [frames.length, MAX_WEBSOCKET_FRAMES])
+      : t("websocketSummaryFiltered", [frames.length, entry.websocket.frames.length]);
 
     if (frames.length === 0) {
       const empty = document.createElement("div");
       empty.className = "request-formatter-inline-empty";
-      empty.textContent = "暂无匹配消息";
+      empty.textContent = t("noMatchingMessages");
       dom.wsMessageList.replaceChildren(empty);
     } else {
       frames.forEach(function appendFrame(frame) {
@@ -806,8 +947,8 @@
     }
 
     if (!selectedFrame) {
-      dom.wsMessageMeta.textContent = "未选中消息";
-      dom.wsMessageOutput.textContent = "No message selected";
+      dom.wsMessageMeta.textContent = t("noMessageSelected");
+      dom.wsMessageOutput.textContent = t("noMessageSelected");
       return;
     }
 
@@ -1099,7 +1240,7 @@
   function renderEmptyListState() {
     const empty = document.createElement("div");
     empty.className = "request-formatter-empty";
-    empty.innerHTML = "<p>暂无匹配请求</p>";
+    empty.innerHTML = `<p>${escapeHtml(t("noMatchingRequests"))}</p>`;
     dom.requestList.replaceChildren(empty);
   }
 
@@ -1293,14 +1434,14 @@
     copyText(getFormattedValue(selected, key, { forCopy: true }))
       .then(function showCopied() {
         const originalText = button.textContent;
-        button.textContent = "已复制";
+        button.textContent = t("copiedButton");
         window.setTimeout(function restoreText() {
           button.textContent = originalText;
         }, 900);
       })
       .catch(function showCopyFailed() {
         const originalText = button.textContent;
-        button.textContent = "复制失败";
+        button.textContent = t("copyFailedButton");
         window.setTimeout(function restoreText() {
           button.textContent = originalText;
         }, 900);
@@ -1328,8 +1469,7 @@
 
   function startCapture() {
     if (!window.chrome?.devtools?.network?.onRequestFinished) {
-      dom.emptyState.querySelector("p").textContent =
-        "当前页面不在 Chrome DevTools Extension 环境中，请以未打包扩展加载后打开 DevTools 使用。";
+      dom.emptyState.querySelector("p").textContent = t("devtoolsUnavailable");
       return;
     }
 
@@ -1381,7 +1521,7 @@
 
       if (!window.chrome?.debugger) {
         syncWebSocketToggle(false);
-        setCaptureStatus("当前环境无法启用 WebSocket 消息捕获。");
+        setCaptureStatus(t("websocketUnavailable"));
         return;
       }
 
@@ -1404,11 +1544,11 @@
       await attachDebugger({ tabId: state.inspectedTabId });
       await sendDebuggerCommand("Network.enable");
       state.debuggerAttached = true;
-      setCaptureStatus("WebSocket 消息捕获已启用。Chrome 可能会在页面顶部显示调试提示。");
+      setCaptureStatus(t("websocketEnabled"));
     } catch (error) {
       state.debuggerAttached = false;
         syncWebSocketToggle(false);
-      setCaptureStatus(`WebSocket 消息捕获启用失败：${error.message}`);
+      setCaptureStatus(t("websocketEnableFailed", error.message));
     } finally {
       state.debuggerPending = false;
     }
@@ -1421,7 +1561,7 @@
       state.debuggerAttached = false;
       state.debuggerPending = false;
         if (!silent && state.webSocketCaptureEnabled) {
-          setCaptureStatus("WebSocket 调试未处于连接状态。");
+          setCaptureStatus(t("websocketNotConnected"));
       }
       return;
     }
@@ -1436,7 +1576,7 @@
     state.debuggerPending = false;
 
     if (!silent) {
-        setCaptureStatus("WebSocket 调试连接已断开。");
+        setCaptureStatus(t("websocketDisconnected"));
     }
   }
 
@@ -1488,7 +1628,7 @@
     state.debuggerAttached = false;
     state.debuggerPending = false;
       syncWebSocketToggle(false);
-    setCaptureStatus(`WebSocket 调试连接已断开：${reason}`);
+    setCaptureStatus(t("websocketDisconnectedWithReason", reason));
   }
 
   function handleWebSocketCreated(params) {
@@ -1683,6 +1823,7 @@
     });
   }
 
+  applyStaticI18n();
   bindEvents();
   render();
   startCapture();

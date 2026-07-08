@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,12 +7,21 @@
     <link rel="stylesheet" href="panel.css" />
   </head>
   <body>
+    <section class="request-formatter-narrow-state" aria-live="polite">
+      <div class="request-formatter-narrow-card">
+        <h1 data-i18n="narrowViewportTitle">Window too narrow</h1>
+        <p data-i18n="narrowViewportDescription">
+          Please widen the DevTools window before using Request Formatter.
+        </p>
+      </div>
+    </section>
+
     <main class="request-formatter-shell">
       <aside class="request-formatter-sidebar" aria-label="Request list">
         <header class="request-formatter-toolbar">
           <div>
             <h1>Request Formatter</h1>
-            <p>格式化 DevTools Network 请求、响应与 WebSocket 消息</p>
+            <p data-i18n="appDescription">Format DevTools Network requests, responses, and WebSocket messages</p>
           </div>
           <div class="request-formatter-toggle-group">
             <label class="request-formatter-toggle">
@@ -30,10 +39,11 @@
           <input
             id="request-filter"
             type="search"
-            placeholder="按 URL、方法、状态过滤"
+            placeholder="Filter by URL, method, or status"
+            data-i18n-attrs="placeholder:requestFilterPlaceholder"
             aria-label="Filter requests"
           />
-          <button id="clear-button" type="button">清空</button>
+          <button id="clear-button" type="button" data-i18n="clearButton">Clear</button>
         </div>
 
         <p id="capture-status" class="request-formatter-status" hidden></p>
@@ -43,8 +53,8 @@
 
       <section class="request-formatter-detail" aria-label="Request detail">
         <div id="empty-state" class="request-formatter-empty">
-          <h2>等待请求</h2>
-          <p>打开当前页面的 Network 请求后，这里会展示可格式化的 request、response 与 WebSocket 数据。</p>
+          <h2 data-i18n="emptyStateTitle">Waiting for requests</h2>
+          <p data-i18n="emptyStateDescription">Open Network requests on the current page, and formatted request, response, and WebSocket data will appear here.</p>
         </div>
 
         <article id="detail-view" class="request-formatter-detail-view" hidden>
@@ -76,42 +86,42 @@
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>URL Params</h3>
-                <button type="button" data-copy="query">复制</button>
+                <button type="button" data-copy="query" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="all-query-output"></pre>
             </section>
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Request Headers</h3>
-                <button type="button" data-copy="requestHeaders">复制</button>
+                <button type="button" data-copy="requestHeaders" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="all-request-headers-output"></pre>
             </section>
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Request Body</h3>
-                <button type="button" data-copy="requestBody">复制</button>
+                <button type="button" data-copy="requestBody" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="all-request-body-output"></pre>
             </section>
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Response Headers</h3>
-                <button type="button" data-copy="responseHeaders">复制</button>
+                <button type="button" data-copy="responseHeaders" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="all-response-headers-output"></pre>
             </section>
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Response Body</h3>
-                <button type="button" data-copy="responseBody">复制</button>
+                <button type="button" data-copy="responseBody" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="all-response-body-output"></pre>
             </section>
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Timing</h3>
-                <button type="button" data-copy="timing">复制</button>
+                <button type="button" data-copy="timing" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="all-timing-output"></pre>
             </section>
@@ -121,7 +131,7 @@
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>URL Params</h3>
-                <button type="button" data-copy="query">复制</button>
+                <button type="button" data-copy="query" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="query-output"></pre>
             </section>
@@ -131,14 +141,14 @@
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Request Headers</h3>
-                <button type="button" data-copy="requestHeaders">复制</button>
+                <button type="button" data-copy="requestHeaders" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="request-headers-output"></pre>
             </section>
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Request Body</h3>
-                <button type="button" data-copy="requestBody">复制</button>
+                <button type="button" data-copy="requestBody" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="request-body-output"></pre>
             </section>
@@ -148,14 +158,14 @@
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Response Headers</h3>
-                <button type="button" data-copy="responseHeaders">复制</button>
+                <button type="button" data-copy="responseHeaders" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="response-headers-output"></pre>
             </section>
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Response Body</h3>
-                <button type="button" data-copy="responseBody">复制</button>
+                <button type="button" data-copy="responseBody" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="response-body-output"></pre>
             </section>
@@ -165,7 +175,7 @@
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Timing</h3>
-                <button type="button" data-copy="timing">复制</button>
+                <button type="button" data-copy="timing" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="timing-output"></pre>
             </section>
@@ -175,7 +185,7 @@
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Overview</h3>
-                <button type="button" data-copy="wsOverview">复制</button>
+                <button type="button" data-copy="wsOverview" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="ws-overview-output"></pre>
             </section>
@@ -185,21 +195,21 @@
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>URL Params</h3>
-                <button type="button" data-copy="query">复制</button>
+                <button type="button" data-copy="query" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="ws-query-output"></pre>
             </section>
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Request Headers</h3>
-                <button type="button" data-copy="requestHeaders">复制</button>
+                <button type="button" data-copy="requestHeaders" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="ws-request-headers-output"></pre>
             </section>
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Response Headers</h3>
-                <button type="button" data-copy="responseHeaders">复制</button>
+                <button type="button" data-copy="responseHeaders" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="ws-response-headers-output"></pre>
             </section>
@@ -209,13 +219,14 @@
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Messages</h3>
-                <button type="button" data-copy="wsMessage">复制当前消息</button>
+                <button type="button" data-copy="wsMessage" data-i18n="copyCurrentMessageButton">Copy current message</button>
               </div>
               <div class="request-formatter-message-toolbar">
                 <input
                   id="ws-message-filter"
                   type="search"
-                  placeholder="按消息内容过滤"
+                  placeholder="Filter by message content"
+                  data-i18n-attrs="placeholder:messageFilterPlaceholder"
                   aria-label="Filter websocket messages"
                 />
                 <p id="ws-message-summary" class="request-formatter-message-summary"></p>
@@ -235,7 +246,7 @@
             <section class="request-formatter-card">
               <div class="request-formatter-card-title">
                 <h3>Timing</h3>
-                <button type="button" data-copy="timing">复制</button>
+                <button type="button" data-copy="timing" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="ws-timing-output"></pre>
             </section>

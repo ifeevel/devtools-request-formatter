@@ -1,0 +1,106 @@
+{
+  "extensionName": {
+    "message": "Request Formatter for DevTools"
+  },
+  "extensionDescription": {
+    "message": "Format HTTP request, response, and WebSocket payloads directly inside Chrome DevTools."
+  },
+  "appDescription": {
+    "message": "Format DevTools Network requests, responses, and WebSocket messages"
+  },
+  "requestFilterPlaceholder": {
+    "message": "Filter by URL, method, or status"
+  },
+  "clearButton": {
+    "message": "Clear"
+  },
+  "emptyStateTitle": {
+    "message": "Waiting for requests"
+  },
+  "emptyStateDescription": {
+    "message": "Open Network requests on the current page, and formatted request, response, and WebSocket data will appear here."
+  },
+  "narrowViewportTitle": {
+    "message": "Window too narrow"
+  },
+  "narrowViewportDescription": {
+    "message": "Please widen the DevTools window before using Request Formatter."
+  },
+  "copyButton": {
+    "message": "Copy"
+  },
+  "copyCurrentMessageButton": {
+    "message": "Copy current message"
+  },
+  "copiedButton": {
+    "message": "Copied"
+  },
+  "copyFailedButton": {
+    "message": "Copy failed"
+  },
+  "messageFilterPlaceholder": {
+    "message": "Filter by message content"
+  },
+  "websocketSummaryAll": {
+    "message": "$count$ messages. Keeping the latest $limit$ at most.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      },
+      "limit": {
+        "content": "$2"
+      }
+    }
+  },
+  "websocketSummaryFiltered": {
+    "message": "$filtered$ after filtering. $total$ total.",
+    "placeholders": {
+      "filtered": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      }
+    }
+  },
+  "noMatchingMessages": {
+    "message": "No matching messages"
+  },
+  "noMessageSelected": {
+    "message": "No message selected"
+  },
+  "noMatchingRequests": {
+    "message": "No matching requests"
+  },
+  "devtoolsUnavailable": {
+    "message": "The current page is not running in a Chrome DevTools Extension environment. Load the unpacked extension and open DevTools to use it."
+  },
+  "websocketUnavailable": {
+    "message": "WebSocket message capture cannot be enabled in the current environment."
+  },
+  "websocketEnabled": {
+    "message": "WebSocket message capture is enabled. Chrome may show a debugging notice at the top of the page."
+  },
+  "websocketEnableFailed": {
+    "message": "Failed to enable WebSocket message capture: $error$",
+    "placeholders": {
+      "error": {
+        "content": "$1"
+      }
+    }
+  },
+  "websocketNotConnected": {
+    "message": "WebSocket debugging is not connected."
+  },
+  "websocketDisconnected": {
+    "message": "WebSocket debugging connection disconnected."
+  },
+  "websocketDisconnectedWithReason": {
+    "message": "WebSocket debugging connection disconnected: $reason$",
+    "placeholders": {
+      "reason": {
+        "content": "$1"
+      }
+    }
+  }
+}
