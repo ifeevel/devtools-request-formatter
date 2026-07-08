@@ -1,105 +1,22 @@
+import {
+  escapeHtml,
+  formatDuration,
+  formatHeaders,
+  formatPayload,
+  formatQuery,
+  formatTimestamp,
+  objectFromPairs,
+  shortenUrl
+} from "./formatters.js";
+import { applyStaticI18n, t } from "./i18n.js";
+import {
+  createController as createWebSocketController,
+  createDomRefs as createWebSocketDomRefs,
+  createState as createWebSocketState
+} from "./panel-websocket.js";
+
 (function initRequestFormatterPanel() {
   const MAX_ENTRIES = 500;
-  const LARGE_PAYLOAD_CHAR_LIMIT = 100000;
-  const PAYLOAD_PREVIEW_CHAR_LIMIT = 20000;
-  const FALLBACK_MESSAGES = {
-    appDescription: {
-      en: "Format DevTools Network requests, responses, and WebSocket messages",
-      zh_CN: "格式化 DevTools Network 请求、响应与 WebSocket 消息"
-    },
-    requestFilterPlaceholder: {
-      en: "Filter by URL, method, or status",
-      zh_CN: "按 URL、方法、状态过滤"
-    },
-    clearButton: {
-      en: "Clear",
-      zh_CN: "清空"
-    },
-    emptyStateTitle: {
-      en: "Waiting for requests",
-      zh_CN: "等待请求"
-    },
-    emptyStateDescription: {
-      en: "Open Network requests on the current page, and formatted request, response, and WebSocket data will appear here.",
-      zh_CN: "打开当前页面的 Network 请求后，这里会展示可格式化的 request、response 与 WebSocket 数据。"
-    },
-    narrowViewportTitle: {
-      en: "Window too narrow",
-      zh_CN: "当前窗口过窄"
-    },
-    narrowViewportDescription: {
-      en: "Please widen the DevTools window before using Request Formatter.",
-      zh_CN: "请先将 DevTools 窗口拉宽后再使用 Request Formatter。"
-    },
-    copyButton: {
-      en: "Copy",
-      zh_CN: "复制"
-    },
-    copyCurrentMessageButton: {
-      en: "Copy current message",
-      zh_CN: "复制当前消息"
-    },
-    copiedButton: {
-      en: "Copied",
-      zh_CN: "已复制"
-    },
-    copyFailedButton: {
-      en: "Copy failed",
-      zh_CN: "复制失败"
-    },
-    messageFilterPlaceholder: {
-      en: "Filter by message content",
-      zh_CN: "按消息内容过滤"
-    },
-    websocketSummaryAll: {
-      en: "$1 messages. Keeping the latest $2 at most.",
-      zh_CN: "共 $1 条消息，最多保留最近 $2 条。"
-    },
-    websocketSummaryFiltered: {
-      en: "$1 after filtering. $2 total.",
-      zh_CN: "过滤后 $1 条，原始共 $2 条。"
-    },
-    noMatchingMessages: {
-      en: "No matching messages",
-      zh_CN: "暂无匹配消息"
-    },
-    noMessageSelected: {
-      en: "No message selected",
-      zh_CN: "未选中消息"
-    },
-    noMatchingRequests: {
-      en: "No matching requests",
-      zh_CN: "暂无匹配请求"
-    },
-    devtoolsUnavailable: {
-      en: "The current page is not running in a Chrome DevTools Extension environment. Load the unpacked extension and open DevTools to use it.",
-      zh_CN: "当前页面不在 Chrome DevTools Extension 环境中，请以未打包扩展加载后打开 DevTools 使用。"
-    },
-    websocketUnavailable: {
-      en: "WebSocket message capture cannot be enabled in the current environment.",
-      zh_CN: "当前环境无法启用 WebSocket 消息捕获。"
-    },
-    websocketEnabled: {
-      en: "WebSocket message capture is enabled. Chrome may show a debugging notice at the top of the page.",
-      zh_CN: "WebSocket 消息捕获已启用。Chrome 可能会在页面顶部显示调试提示。"
-    },
-    websocketEnableFailed: {
-      en: "Failed to enable WebSocket message capture: $1",
-      zh_CN: "WebSocket 消息捕获启用失败：$1"
-    },
-    websocketNotConnected: {
-      en: "WebSocket debugging is not connected.",
-      zh_CN: "WebSocket 调试未处于连接状态。"
-    },
-    websocketDisconnected: {
-      en: "WebSocket debugging connection disconnected.",
-      zh_CN: "WebSocket 调试连接已断开。"
-    },
-    websocketDisconnectedWithReason: {
-      en: "WebSocket debugging connection disconnected: $1",
-      zh_CN: "WebSocket 调试连接已断开：$1"
-    }
-  };
   const state = {
     entries: [],
     selectedId: null,
@@ -111,7 +28,7 @@
     },
     listItemMap: new Map(),
     httpCaptureBound: false,
-    ...window.RequestFormatterWebSocket.createState({
+    ...createWebSocketState({
       inspectedTabId: window.chrome?.devtools?.inspectedWindow?.tabId ?? null
     })
   };
@@ -144,53 +61,10 @@
     tabButtons: Array.from(document.querySelectorAll("[data-tab]")),
     tabPanels: Array.from(document.querySelectorAll("[data-panel]")),
     timingOutput: document.getElementById("timing-output"),
-    ...window.RequestFormatterWebSocket.createDomRefs(document)
+    ...createWebSocketDomRefs(document)
   };
 
-  function getFallbackLocale() {
-    const locale = window.chrome?.i18n?.getUILanguage?.() || navigator.language || "en";
-    return locale.toLowerCase().startsWith("zh") ? "zh_CN" : "en";
-  }
-
-  function t(key, substitutions) {
-    const values = Array.isArray(substitutions)
-      ? substitutions.map(String)
-      : substitutions === undefined
-        ? []
-        : [String(substitutions)];
-    const message = window.chrome?.i18n?.getMessage?.(key, values);
-
-    if (message) {
-      return message;
-    }
-
-    const fallback = FALLBACK_MESSAGES[key]?.[getFallbackLocale()] || FALLBACK_MESSAGES[key]?.en || key;
-    return values.reduce(function replaceSubstitution(result, value, index) {
-      return result.replaceAll(`$${index + 1}`, value);
-    }, fallback);
-  }
-
-  function applyStaticI18n() {
-    document.documentElement.lang = getFallbackLocale() === "zh_CN" ? "zh-CN" : "en";
-
-    document.querySelectorAll("[data-i18n]").forEach(function translateText(element) {
-      element.textContent = t(element.dataset.i18n);
-    });
-
-    document.querySelectorAll("[data-i18n-attrs]").forEach(function translateAttributes(element) {
-      element.dataset.i18nAttrs.split(",").forEach(function translateAttribute(pair) {
-        const parts = pair.split(":");
-        const attribute = parts[0]?.trim();
-        const key = parts[1]?.trim();
-
-        if (attribute && key) {
-          element.setAttribute(attribute, t(key));
-        }
-      });
-    });
-  }
-
-  const websocketController = window.RequestFormatterWebSocket.createController({
+  const websocketController = createWebSocketController({
     state,
     dom,
     t,
@@ -287,45 +161,6 @@
     entry.formattedCopyCache = {};
   }
 
-  function formatQuery(url, queryString) {
-    const pairs = [];
-
-    if (Array.isArray(queryString) && queryString.length > 0) {
-      queryString.forEach(function pushHarParam(param) {
-        pairs.push([param.name, param.value]);
-      });
-    } else {
-      try {
-        const parsedUrl = new URL(url);
-        parsedUrl.searchParams.forEach(function pushSearchParam(value, key) {
-          pairs.push([key, value]);
-        });
-      } catch (error) {
-        return "No URL params";
-      }
-    }
-
-    if (pairs.length === 0) {
-      return "No URL params";
-    }
-
-    return JSON.stringify(objectFromPairs(pairs), null, 2);
-  }
-
-  function formatHeaders(headers) {
-    if (!Array.isArray(headers) || headers.length === 0) {
-      return "No headers";
-    }
-
-    return JSON.stringify(
-      objectFromPairs(headers.map(function toPair(header) {
-        return [header.name, header.value];
-      })),
-      null,
-      2
-    );
-  }
-
   function formatRequestBody(postData, options) {
     if (!postData) {
       return "No request body";
@@ -371,86 +206,6 @@
     }
 
     return formatPayload(entry.responseContent, entry.mimeType, options);
-  }
-
-  function formatPayload(text, mimeType, options) {
-    const rawSource = String(text ?? "");
-    const source = options?.preserveWhitespace ? rawSource : rawSource.trim();
-    const detectionSource = source.trim();
-    const type = String(mimeType || "").toLowerCase();
-    const previewMode = !options?.forCopy;
-
-    if (!source) {
-      return "Empty body";
-    }
-
-    if (previewMode && source.length > LARGE_PAYLOAD_CHAR_LIMIT) {
-      return [
-        `[Preview only] Payload is too large to fully format in the panel (${source.length.toLocaleString()} chars).`,
-        `Only the first ${PAYLOAD_PREVIEW_CHAR_LIMIT.toLocaleString()} chars are shown to keep the UI responsive.`,
-        "",
-        source.slice(0, PAYLOAD_PREVIEW_CHAR_LIMIT)
-      ].join("\n");
-    }
-
-    if (looksLikeJson(type, detectionSource)) {
-      const formattedJson = tryFormatJson(source);
-      if (formattedJson) {
-        return formattedJson;
-      }
-    }
-
-    if (type.includes("application/x-www-form-urlencoded")) {
-      return formatUrlEncoded(source);
-    }
-
-    return source;
-  }
-
-  function looksLikeJson(mimeType, source) {
-    return mimeType.includes("json") || source.startsWith("{") || source.startsWith("[");
-  }
-
-  function tryFormatJson(source) {
-    try {
-      return JSON.stringify(JSON.parse(source), null, 2);
-    } catch (error) {
-      return "";
-    }
-  }
-
-  function formatUrlEncoded(source) {
-    const params = new URLSearchParams(source);
-    const pairs = [];
-
-    params.forEach(function pushParam(value, key) {
-      pairs.push([key, value]);
-    });
-
-    if (pairs.length === 0) {
-      return source;
-    }
-
-    return JSON.stringify(objectFromPairs(pairs), null, 2);
-  }
-
-  function objectFromPairs(pairs) {
-    return pairs.reduce(function collect(result, pair) {
-      const key = pair[0] || "";
-      const value = pair[1] ?? "";
-
-      if (!key) {
-        return result;
-      }
-
-      if (Object.prototype.hasOwnProperty.call(result, key)) {
-        result[key] = Array.isArray(result[key]) ? result[key].concat(value) : [result[key], value];
-      } else {
-        result[key] = value;
-      }
-
-      return result;
-    }, {});
   }
 
   function formatHttpTiming(entry) {
@@ -689,44 +444,6 @@
     }
 
     return formatDuration(entry.duration, "Unknown time");
-  }
-
-  function formatDuration(duration, fallback) {
-    if (typeof duration !== "number" || Number.isNaN(duration)) {
-      return fallback;
-    }
-
-    if (duration >= 1000) {
-      return `${(duration / 1000).toFixed(1)} s`;
-    }
-
-    return `${duration.toFixed(0)} ms`;
-  }
-
-  function formatTimestamp(timestampMs) {
-    if (typeof timestampMs !== "number" || Number.isNaN(timestampMs)) {
-      return "";
-    }
-
-    return new Date(timestampMs).toISOString();
-  }
-
-  function shortenUrl(url) {
-    try {
-      const parsedUrl = new URL(url);
-      return `${parsedUrl.pathname || "/"}${parsedUrl.search || ""}`;
-    } catch (error) {
-      return url || "Unknown URL";
-    }
-  }
-
-  function escapeHtml(value) {
-    return String(value)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
   }
 
   function matchesEntryFilter(entry, keyword) {

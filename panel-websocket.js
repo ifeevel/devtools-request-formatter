@@ -1,11 +1,10 @@
-(function initRequestFormatterWebSocketModule(globalThisValue) {
-  const MAX_WEBSOCKET_FRAMES = 500;
-  const WEBSOCKET_MESSAGES_FILTER_RENDER_DELAY = 60;
-  const DEBUGGER_PROTOCOL_VERSION = "1.3";
-  const WEBSOCKET_MIME_TYPE = "WebSocket";
-  const WEBSOCKET_DEFAULT_PROTOCOL_LABEL = "WebSocket";
+const MAX_WEBSOCKET_FRAMES = 500;
+const WEBSOCKET_MESSAGES_FILTER_RENDER_DELAY = 60;
+const DEBUGGER_PROTOCOL_VERSION = "1.3";
+const WEBSOCKET_MIME_TYPE = "WebSocket";
+const WEBSOCKET_DEFAULT_PROTOCOL_LABEL = "WebSocket";
 
-  function createState(options) {
+export function createState(options) {
     return {
       webSocketCaptureEnabled: false,
       webSocketEntryIdsByRequestId: new Map(),
@@ -24,7 +23,7 @@
     };
   }
 
-  function createDomRefs(documentValue) {
+export function createDomRefs(documentValue) {
     return {
       websocketToggle: documentValue.getElementById("websocket-toggle"),
       wsMessageFilter: documentValue.getElementById("ws-message-filter"),
@@ -40,7 +39,7 @@
     };
   }
 
-  function createController(deps) {
+export function createController(deps) {
     const {
       state,
       dom,
@@ -1168,10 +1167,3 @@
       clearState
     };
   }
-
-  globalThisValue.RequestFormatterWebSocket = {
-    createState,
-    createDomRefs,
-    createController
-  };
-})(window);
