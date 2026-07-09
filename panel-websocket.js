@@ -1,3 +1,5 @@
+import { getLeadingContent, normalizePreviewText } from "./formatters.js";
+
 const MAX_WEBSOCKET_FRAMES = 500;
 const WEBSOCKET_MESSAGES_FILTER_RENDER_DELAY = 60;
 const DEBUGGER_PROTOCOL_VERSION = "1.3";
@@ -104,11 +106,11 @@ export function createController(deps) {
     function getFormattedValue(entry, key, options) {
       switch (key) {
         case "query":
-          return deps.formatQuery(entry.url, entry.queryString);
+          return deps.formatQuery(entry.url, entry.queryString, options);
         case "requestHeaders":
-          return deps.formatHeaders(entry.requestHeaders);
+          return deps.formatHeaders(entry.requestHeaders, options);
         case "responseHeaders":
-          return deps.formatHeaders(entry.responseHeaders);
+          return deps.formatHeaders(entry.responseHeaders, options);
         case "timing":
           return formatTiming(entry);
         case "wsOverview":
@@ -167,7 +169,7 @@ export function createController(deps) {
       const frame = getSelectedFrame(entry);
 
       if (!frame) {
-        return "No message selected";
+        return options?.forCopy ? "" : "No message selected";
       }
 
       if (options?.forCopy) {
@@ -552,7 +554,7 @@ export function createController(deps) {
         return frame.payloadData || `${frame.type} frame`;
       }
 
-      const singleLine = String(frame.payloadData || "").replace(/\s+/g, " ").trim();
+      const singleLine = normalizePreviewText(frame.payloadData);
       return singleLine || "Empty payload";
     }
 
@@ -1056,7 +1058,9 @@ export function createController(deps) {
         return "pong";
       }
 
-      if (String(payloadData || "").trim().startsWith("{") || String(payloadData || "").trim().startsWith("[")) {
+      const leadingContent = getLeadingContent(payloadData);
+
+      if (leadingContent.startsWith("{") || leadingContent.startsWith("[")) {
         return "json";
       }
 
