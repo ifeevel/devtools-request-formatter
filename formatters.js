@@ -93,6 +93,85 @@ export function normalizePreviewText(value) {
   return normalized.replace(/^ /, "").replace(/ $/, "");
 }
 
+export function parseQueryString(url) {
+  try {
+    const parsedUrl = new URL(url);
+    const pairs = [];
+
+    parsedUrl.searchParams.forEach(function pushSearchParam(value, key) {
+      pairs.push({ name: key, value });
+    });
+    return pairs;
+  } catch (error) {
+    return [];
+  }
+}
+
+export function headerPairsFromObject(headers) {
+  if (!headers || typeof headers !== "object") {
+    return [];
+  }
+
+  return Object.keys(headers).map(function toHeaderPair(name) {
+    return {
+      name,
+      value: normalizeHeaderValue(headers[name])
+    };
+  });
+}
+
+export function getHeaderValue(headers, headerName) {
+  const target = String(headerName || "").toLowerCase();
+  const found = (headers || []).find(function findHeader(header) {
+    return String(header.name || "").toLowerCase() === target;
+  });
+
+  return found?.value || "";
+}
+
+export function getTextByteLength(value) {
+  try {
+    return new TextEncoder().encode(String(value || "")).length;
+  } catch (error) {
+    return String(value || "").length;
+  }
+}
+
+export function initializeTimeOrigin(entry, timestamp, wallTime) {
+  if (
+    typeof timestamp === "number" &&
+    Number.isFinite(timestamp) &&
+    entry.websocket.timeOriginTimestamp === null
+  ) {
+    entry.websocket.timeOriginTimestamp = timestamp;
+  }
+
+  if (
+    typeof wallTime === "number" &&
+    Number.isFinite(wallTime) &&
+    entry.websocket.timeOriginWallTimeMs === null
+  ) {
+    entry.websocket.timeOriginWallTimeMs = wallTime * 1000;
+  }
+}
+
+export function resolveEventTimeMs(entry, timestamp, wallTime) {
+  if (typeof wallTime === "number" && Number.isFinite(wallTime)) {
+    return wallTime * 1000;
+  }
+
+  if (
+    typeof timestamp === "number" &&
+    Number.isFinite(timestamp) &&
+    typeof entry.websocket?.timeOriginTimestamp === "number" &&
+    typeof entry.websocket?.timeOriginWallTimeMs === "number"
+  ) {
+    return entry.websocket.timeOriginWallTimeMs + (timestamp - entry.websocket.timeOriginTimestamp) * 1000;
+  }
+
+  return null;
+}
+
 function translateOption(options, key, substitutions, fallback) {
   return typeof options?.t === "function" ? options.t(key, substitutions) : fallback;
 }
@@ -179,4 +258,16 @@ function formatUrlEncoded(source) {
   }
 
   return JSON.stringify(objectFromPairs(pairs), null, 2);
+}
+
+function normalizeHeaderValue(value) {
+  if (Array.isArray(value)) {
+    return value.join(", ");
+  }
+
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  return String(value);
 }

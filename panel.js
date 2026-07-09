@@ -4,7 +4,6 @@ import {
   formatHeaders,
   formatPayload,
   formatQuery,
-  formatTimestamp,
   objectFromPairs,
   shortenUrl
 } from "./formatters.js";
@@ -84,14 +83,7 @@ import {
     getActiveTab,
     refreshEntry,
     resetFormattedCache,
-    formatPayload,
-    formatTimestamp,
-    escapeHtml,
-    shortenUrl,
     setCaptureStatus,
-    formatQuery,
-    formatHeaders,
-    formatDuration,
     updateDetailMeta,
     detailRenderer
   });
