@@ -365,7 +365,7 @@ pre {
   grid-template-columns: minmax(0, 1fr) auto auto auto auto;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem;
+  padding: 0.25rem;
   border: 0.0625rem solid var(--rf-border);
   border-radius: 1rem;
   background: var(--rf-surface);
