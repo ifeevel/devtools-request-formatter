@@ -56,7 +56,8 @@ export function createController(deps) {
       formatTimestamp,
       escapeHtml,
       shortenUrl,
-      setCaptureStatus
+      setCaptureStatus,
+      detailRenderer
     } = deps;
 
     function createEntry(requestId, url) {
@@ -213,24 +214,32 @@ export function createController(deps) {
       const activeTab = getActiveTab("websocket");
 
       if (activeTab === "overview") {
-        dom.wsOverviewOutput.textContent = getFormattedValue(entry, "wsOverview");
+        detailRenderer.renderSection(function renderOverviewTab() {
+          detailRenderer.renderText(dom.wsOverviewOutput, getFormattedValue(entry, "wsOverview"));
+        });
         return;
       }
 
       if (activeTab === "handshake") {
-        dom.wsQueryOutput.textContent = getFormattedValue(entry, "query");
-        dom.wsRequestHeadersOutput.textContent = getFormattedValue(entry, "requestHeaders");
-        dom.wsResponseHeadersOutput.textContent = getFormattedValue(entry, "responseHeaders");
+        detailRenderer.renderSection(function renderHandshakeTab() {
+          detailRenderer.renderText(dom.wsQueryOutput, getFormattedValue(entry, "query"));
+          detailRenderer.renderText(dom.wsRequestHeadersOutput, getFormattedValue(entry, "requestHeaders"));
+          detailRenderer.renderText(dom.wsResponseHeadersOutput, getFormattedValue(entry, "responseHeaders"));
+        });
         return;
       }
 
       if (activeTab === "messages") {
-        renderMessages(entry);
+        detailRenderer.renderSection(function renderMessagesTab() {
+          renderMessages(entry);
+        });
         return;
       }
 
       if (activeTab === "timing") {
-        dom.wsTimingOutput.textContent = getFormattedValue(entry, "timing");
+        detailRenderer.renderSection(function renderTimingTab() {
+          detailRenderer.renderText(dom.wsTimingOutput, getFormattedValue(entry, "timing"));
+        });
       }
     }
 
@@ -255,7 +264,7 @@ export function createController(deps) {
     function renderMessageDetail(entry, selectedFrame) {
       if (!selectedFrame) {
         dom.wsMessageMeta.textContent = t("noMessageSelected");
-        dom.wsMessageOutput.textContent = t("noMessageSelected");
+        detailRenderer.renderText(dom.wsMessageOutput, t("noMessageSelected"));
         return;
       }
 
@@ -265,7 +274,7 @@ export function createController(deps) {
         `${selectedFrame.size.toLocaleString()} bytes`,
         formatTimestamp(selectedFrame.timeMs) || "Unknown time"
       ].join(" · ");
-      dom.wsMessageOutput.textContent = formatSelectedMessage(entry);
+      detailRenderer.renderText(dom.wsMessageOutput, formatSelectedMessage(entry));
     }
 
     function renderMessageList(entry, frames) {
@@ -441,8 +450,10 @@ export function createController(deps) {
         return;
       }
 
-      deps.updateDetailMeta(entry);
-      renderMessages(entry);
+      detailRenderer.renderSection(function renderScheduledMessages() {
+        deps.updateDetailMeta(entry);
+        renderMessages(entry);
+      });
     }
 
     function scheduleMessagesRender(entryId, options) {
@@ -692,7 +703,9 @@ export function createController(deps) {
         selected.websocket.selectedFrameId = item.dataset.frameId;
         updateRenderedMessageSelection(selected.websocket.selectedFrameId, previousFrameId);
         state.wsRenderedSelectedFrameId = selected.websocket.selectedFrameId;
-        renderMessageDetail(selected, getSelectedFrame(selected));
+        detailRenderer.renderSection(function renderSelectedMessageDetail() {
+          renderMessageDetail(selected, getSelectedFrame(selected));
+        });
       });
 
       window.addEventListener("beforeunload", function cleanupCapture() {

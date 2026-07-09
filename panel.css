@@ -9,6 +9,8 @@
   --rf-accent: #007aff;
   --rf-accent-soft: rgba(0, 122, 255, 0.1);
   --rf-danger: #c2410c;
+  --rf-search: #facc15;
+  --rf-search-active: #fb923c;
   --rf-websocket-accent: #0f766e;
   --rf-shadow: none;
   font-family:
@@ -27,6 +29,8 @@
   --rf-accent: #007aff;
   --rf-accent-soft: rgba(0, 122, 255, 0.16);
   --rf-danger: #fb923c;
+  --rf-search: #a16207;
+  --rf-search-active: #ea580c;
   --rf-websocket-accent: #5eead4;
   --rf-shadow: none;
 }
@@ -349,6 +353,73 @@ pre {
   border-color: var(--rf-accent);
   color: var(--rf-text);
   background: var(--rf-accent-soft);
+}
+
+.request-formatter-detail-search {
+  position: fixed;
+  z-index: 20;
+  top: 1rem;
+  right: 1rem;
+  width: min(42rem, calc(100vw - 27rem));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 0.0625rem solid var(--rf-border);
+  border-radius: 1rem;
+  background: var(--rf-surface);
+}
+
+.request-formatter-detail-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.55rem 0.7rem;
+  border: 0.0625rem solid var(--rf-border);
+  border-radius: 0.6rem;
+  color: var(--rf-text);
+  background: var(--rf-surface-muted);
+  outline: none;
+}
+
+.request-formatter-detail-search input:focus {
+  border-color: var(--rf-accent);
+}
+
+.request-formatter-detail-search button {
+  padding: 0.45rem 0.7rem;
+  color: var(--rf-text-muted);
+  font-size: 0.75rem;
+}
+
+.request-formatter-detail-search button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+.request-formatter-detail-search-close {
+  width: 2rem;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.request-formatter-detail-search-count {
+  min-width: 5.5rem;
+  color: var(--rf-text-muted);
+  font-size: 0.75rem;
+  text-align: right;
+}
+
+.request-formatter-search-match {
+  border-radius: 0.2rem;
+  color: inherit;
+  background: var(--rf-search);
+}
+
+.request-formatter-search-match.is-active-search-match {
+  color: #ffffff;
+  background: var(--rf-search-active);
 }
 
 .request-formatter-tab-panel {

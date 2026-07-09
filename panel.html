@@ -58,6 +58,28 @@
           <p data-i18n="emptyStateDescription">Open Network requests on the current page, and formatted request, response, and WebSocket data will appear here.</p>
         </div>
 
+        <div class="request-formatter-detail-search" role="search" hidden>
+          <input
+            id="detail-search"
+            type="search"
+            placeholder="Search in detail"
+            data-i18n-attrs="placeholder:detailSearchPlaceholder,aria-label:detailSearchPlaceholder"
+            aria-label="Search in detail"
+          />
+          <span id="detail-search-count" class="request-formatter-detail-search-count">0 matches</span>
+          <button id="detail-search-prev" type="button" data-i18n="detailSearchPrevButton">Prev</button>
+          <button id="detail-search-next" type="button" data-i18n="detailSearchNextButton">Next</button>
+          <button
+            id="detail-search-close"
+            class="request-formatter-detail-search-close"
+            type="button"
+            data-i18n-attrs="aria-label:detailSearchCloseButton"
+            aria-label="Close search"
+          >
+            ×
+          </button>
+        </div>
+
         <article id="detail-view" class="request-formatter-detail-view" hidden>
           <div class="request-formatter-detail-sticky">
             <header class="request-formatter-detail-header">
