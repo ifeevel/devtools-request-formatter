@@ -8,6 +8,7 @@ import {
   objectFromPairs,
   shortenUrl
 } from "./formatters.js";
+import { createController as createDetailSearchController } from "./detail-search.js";
 import { applyStaticI18n, t } from "./i18n.js";
 import {
   createController as createWebSocketController,
@@ -64,6 +65,15 @@ import {
     ...createWebSocketDomRefs(document)
   };
 
+  const detailSearchController = createDetailSearchController({
+    documentValue: document,
+    windowValue: window,
+    t,
+    searchRoot: dom.detailView,
+    onQueryChange: renderDetailBody
+  });
+  const detailRenderer = createDetailRenderer(detailSearchController);
+
   const websocketController = createWebSocketController({
     state,
     dom,
@@ -82,8 +92,22 @@ import {
     formatQuery,
     formatHeaders,
     formatDuration,
-    updateDetailMeta
+    updateDetailMeta,
+    detailRenderer
   });
+
+  function createDetailRenderer(searchController) {
+    return {
+      renderSection(renderContent) {
+        searchController.beginRender();
+        renderContent();
+        searchController.finalizeRender();
+      },
+      renderText(node, value) {
+        searchController.renderPre(node, value);
+      }
+    };
+  }
 
   function createHttpEntry(request) {
     const har = request || {};
@@ -352,21 +376,45 @@ import {
     rebuildList();
   }
 
-  function renderDetail() {
+  function renderDetail(options) {
     const selected = getSelectedEntry();
 
     if (!selected) {
       dom.emptyState.hidden = false;
       dom.detailView.hidden = true;
+      detailSearchController.resetMatches();
       return;
     }
 
-    syncTabsForEntry(selected);
+    const shouldRenderShell = options?.shell !== false;
+    const shouldRenderBody = options?.body !== false;
+
+    if (shouldRenderShell) {
+      renderDetailShell(selected);
+    }
+
+    if (shouldRenderBody) {
+      renderDetailBody(selected);
+    }
+  }
+
+  function renderDetailShell(entry) {
+    syncTabsForEntry(entry);
     dom.emptyState.hidden = true;
     dom.detailView.hidden = false;
-    dom.detailMethod.textContent = selected.method;
-    dom.detailUrl.textContent = selected.url;
-    updateDetailMeta(selected);
+    dom.detailMethod.textContent = entry.method;
+    dom.detailUrl.textContent = entry.url;
+    updateDetailMeta(entry);
+  }
+
+  function renderDetailBody(entry) {
+    const selected = entry || getSelectedEntry();
+
+    if (!selected) {
+      detailSearchController.resetMatches();
+      return;
+    }
+
     renderActiveTabContent(selected);
   }
 
@@ -418,37 +466,47 @@ import {
     if (entry.kind === "http") {
       if (activeTab === "all") {
         ensureResponseContentLoaded(entry);
-        dom.allQueryOutput.textContent = getFormattedValue(entry, "query");
-        dom.allRequestHeadersOutput.textContent = getFormattedValue(entry, "requestHeaders");
-        dom.allRequestBodyOutput.textContent = getFormattedValue(entry, "requestBody");
-        dom.allResponseHeadersOutput.textContent = getFormattedValue(entry, "responseHeaders");
-        dom.allResponseBodyOutput.textContent = getFormattedValue(entry, "responseBody");
-        dom.allTimingOutput.textContent = getFormattedValue(entry, "timing");
+        detailRenderer.renderSection(function renderAllTab() {
+          detailRenderer.renderText(dom.allQueryOutput, getFormattedValue(entry, "query"));
+          detailRenderer.renderText(dom.allRequestHeadersOutput, getFormattedValue(entry, "requestHeaders"));
+          detailRenderer.renderText(dom.allRequestBodyOutput, getFormattedValue(entry, "requestBody"));
+          detailRenderer.renderText(dom.allResponseHeadersOutput, getFormattedValue(entry, "responseHeaders"));
+          detailRenderer.renderText(dom.allResponseBodyOutput, getFormattedValue(entry, "responseBody"));
+          detailRenderer.renderText(dom.allTimingOutput, getFormattedValue(entry, "timing"));
+        });
         return;
       }
 
       if (activeTab === "query") {
-        dom.queryOutput.textContent = getFormattedValue(entry, "query");
+        detailRenderer.renderSection(function renderQueryTab() {
+          detailRenderer.renderText(dom.queryOutput, getFormattedValue(entry, "query"));
+        });
         return;
       }
 
       if (activeTab === "request") {
-        dom.requestHeadersOutput.textContent = getFormattedValue(entry, "requestHeaders");
-        dom.requestBodyOutput.textContent = getFormattedValue(entry, "requestBody");
+        detailRenderer.renderSection(function renderRequestTab() {
+          detailRenderer.renderText(dom.requestHeadersOutput, getFormattedValue(entry, "requestHeaders"));
+          detailRenderer.renderText(dom.requestBodyOutput, getFormattedValue(entry, "requestBody"));
+        });
         return;
       }
 
       if (activeTab === "response") {
         ensureResponseContentLoaded(entry);
-        dom.responseHeadersOutput.textContent = getFormattedValue(entry, "responseHeaders");
-        dom.responseBodyOutput.textContent = getFormattedValue(entry, "responseBody");
+        detailRenderer.renderSection(function renderResponseTab() {
+          detailRenderer.renderText(dom.responseHeadersOutput, getFormattedValue(entry, "responseHeaders"));
+          detailRenderer.renderText(dom.responseBodyOutput, getFormattedValue(entry, "responseBody"));
+        });
         return;
       }
 
       if (activeTab === "timing") {
-        dom.timingOutput.textContent = getFormattedValue(entry, "timing");
+        detailRenderer.renderSection(function renderTimingTab() {
+          detailRenderer.renderText(dom.timingOutput, getFormattedValue(entry, "timing"));
+        });
+        return;
       }
-
       return;
     }
     websocketController.renderActiveTabContent(entry);
@@ -664,6 +722,8 @@ import {
       state.filterText = event.target.value;
       renderList();
     });
+
+    detailSearchController.bindEvents();
 
     dom.requestList.addEventListener("click", function selectEntry(event) {
       const item = event.target.closest("[data-id]");

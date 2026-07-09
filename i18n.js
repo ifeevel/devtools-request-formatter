@@ -47,6 +47,34 @@ const FALLBACK_MESSAGES = {
     en: "Filter by message content",
     zh_CN: "按消息内容过滤"
   },
+  detailSearchPlaceholder: {
+    en: "Search in detail",
+    zh_CN: "搜索详情内容"
+  },
+  detailSearchEmptyCount: {
+    en: "0 matches",
+    zh_CN: "0 个命中"
+  },
+  detailSearchNoMatches: {
+    en: "No matches",
+    zh_CN: "无命中"
+  },
+  detailSearchCount: {
+    en: "$1 / $2",
+    zh_CN: "$1 / $2"
+  },
+  detailSearchPrevButton: {
+    en: "Prev",
+    zh_CN: "上一个"
+  },
+  detailSearchNextButton: {
+    en: "Next",
+    zh_CN: "下一个"
+  },
+  detailSearchCloseButton: {
+    en: "Close search",
+    zh_CN: "关闭搜索"
+  },
   responseContentNotLoaded: {
     en: "Response content is not loaded yet. Select the Response tab to load it.",
     zh_CN: "响应内容尚未加载。请选择 Response 标签页加载。"

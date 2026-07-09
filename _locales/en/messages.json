@@ -41,6 +41,35 @@
   "messageFilterPlaceholder": {
     "message": "Filter by message content"
   },
+  "detailSearchPlaceholder": {
+    "message": "Search in detail"
+  },
+  "detailSearchEmptyCount": {
+    "message": "0 matches"
+  },
+  "detailSearchNoMatches": {
+    "message": "No matches"
+  },
+  "detailSearchCount": {
+    "message": "$current$ / $total$",
+    "placeholders": {
+      "current": {
+        "content": "$1"
+      },
+      "total": {
+        "content": "$2"
+      }
+    }
+  },
+  "detailSearchPrevButton": {
+    "message": "Prev"
+  },
+  "detailSearchNextButton": {
+    "message": "Next"
+  },
+  "detailSearchCloseButton": {
+    "message": "Close search"
+  },
   "responseContentNotLoaded": {
     "message": "Response content is not loaded yet. Select the Response tab to load it."
   },

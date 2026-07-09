@@ -23,6 +23,7 @@
 - 自动美化 `JSON` 与 `application/x-www-form-urlencoded` 数据
 - 支持查看 `WebSocket` 握手信息、连接状态、消息列表与消息详情
 - 自动格式化 `WebSocket` 文本帧中的 `JSON` 消息
+- 支持在右侧详情区搜索当前请求或连接内容，并高亮匹配结果
 - 自动跟随 DevTools 独立主题切换，并在不支持时降级跟随系统主题
 - 支持过滤请求、暂停捕获、清空列表、复制格式化结果
 
@@ -37,6 +38,7 @@ devtools-request-formatter/
 │   └── package.sh
 ├── devtools.html
 ├── devtools.js
+├── detail-search.js
 ├── formatters.js
 ├── i18n.js
 ├── manifest.json
@@ -67,6 +69,7 @@ devtools-request-formatter/
 3. 刷新页面或触发接口请求
 4. 在左侧列表选择请求，在右侧查看格式化后的详情
 5. 需要采集 WebSocket 帧时，启用 `WebSocket` 开关
+6. 在详情区按 `Ctrl+F` / `Cmd+F` 可打开搜索框，使用 `Enter` 或方向按钮切换匹配结果
 
 ## 权限和数据边界
 
