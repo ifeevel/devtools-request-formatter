@@ -59,29 +59,31 @@
         </div>
 
         <article id="detail-view" class="request-formatter-detail-view" hidden>
-          <header class="request-formatter-detail-header">
-        <div class="request-formatter-detail-top">
-          <p id="detail-method" class="request-formatter-method"></p>
-          <div class="request-formatter-meta">
-            <span id="detail-status"></span>
-            <span id="detail-type"></span>
-            <span id="detail-duration"></span>
-          </div>
-        </div>
-        <h2 id="detail-url"></h2>
-      </header>
+          <div class="request-formatter-detail-sticky">
+            <header class="request-formatter-detail-header">
+              <div class="request-formatter-detail-top">
+                <p id="detail-method" class="request-formatter-method"></p>
+                <div class="request-formatter-meta">
+                  <span id="detail-status"></span>
+                  <span id="detail-type"></span>
+                  <span id="detail-duration"></span>
+                </div>
+              </div>
+              <h2 id="detail-url"></h2>
+            </header>
 
-          <nav class="request-formatter-tabs" aria-label="Detail tabs">
-            <button class="is-active" type="button" data-kind="http" data-tab="all">All</button>
-            <button type="button" data-kind="http" data-tab="query">URL Params</button>
-            <button type="button" data-kind="http" data-tab="request">Request</button>
-            <button type="button" data-kind="http" data-tab="response">Response</button>
-            <button type="button" data-kind="http" data-tab="timing">Timing</button>
-            <button type="button" data-kind="websocket" data-tab="overview" hidden>Overview</button>
-            <button type="button" data-kind="websocket" data-tab="handshake" hidden>Handshake</button>
-            <button type="button" data-kind="websocket" data-tab="messages" hidden>Messages</button>
-            <button type="button" data-kind="websocket" data-tab="timing" hidden>Timing</button>
-          </nav>
+            <nav class="request-formatter-tabs" aria-label="Detail tabs">
+              <button class="is-active" type="button" data-kind="http" data-tab="all">All</button>
+              <button type="button" data-kind="http" data-tab="query">URL Params</button>
+              <button type="button" data-kind="http" data-tab="request">Request</button>
+              <button type="button" data-kind="http" data-tab="response">Response</button>
+              <button type="button" data-kind="http" data-tab="timing">Timing</button>
+              <button type="button" data-kind="websocket" data-tab="overview" hidden>Overview</button>
+              <button type="button" data-kind="websocket" data-tab="handshake" hidden>Handshake</button>
+              <button type="button" data-kind="websocket" data-tab="messages" hidden>Messages</button>
+              <button type="button" data-kind="websocket" data-tab="timing" hidden>Timing</button>
+            </nav>
+          </div>
 
           <div class="request-formatter-tab-panel is-active" data-kind="http" data-panel="all">
             <section class="request-formatter-card">
