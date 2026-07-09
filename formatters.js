@@ -1,7 +1,7 @@
 const LARGE_PAYLOAD_CHAR_LIMIT = 100000;
 const PAYLOAD_PREVIEW_CHAR_LIMIT = 20000;
 
-export function formatQuery(url, queryString) {
+export function formatQuery(url, queryString, options) {
   const pairs = [];
 
   if (Array.isArray(queryString) && queryString.length > 0) {
@@ -15,20 +15,20 @@ export function formatQuery(url, queryString) {
         pairs.push([key, value]);
       });
     } catch (error) {
-      return "No URL params";
+      return options?.forCopy ? "" : "No URL params";
     }
   }
 
   if (pairs.length === 0) {
-    return "No URL params";
+    return options?.forCopy ? "" : "No URL params";
   }
 
   return JSON.stringify(objectFromPairs(pairs), null, 2);
 }
 
-export function formatHeaders(headers) {
+export function formatHeaders(headers, options) {
   if (!Array.isArray(headers) || headers.length === 0) {
-    return "No headers";
+    return options?.forCopy ? "" : "No headers";
   }
 
   return JSON.stringify(
@@ -48,7 +48,7 @@ export function formatPayload(text, mimeType, options) {
   const previewMode = !options?.forCopy;
 
   if (!rawSource) {
-    return "Empty body";
+    return options?.forCopy ? "" : "Empty body";
   }
 
   if (previewMode && source.length > LARGE_PAYLOAD_CHAR_LIMIT) {

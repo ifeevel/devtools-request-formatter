@@ -106,11 +106,11 @@ export function createController(deps) {
     function getFormattedValue(entry, key, options) {
       switch (key) {
         case "query":
-          return deps.formatQuery(entry.url, entry.queryString);
+          return deps.formatQuery(entry.url, entry.queryString, options);
         case "requestHeaders":
-          return deps.formatHeaders(entry.requestHeaders);
+          return deps.formatHeaders(entry.requestHeaders, options);
         case "responseHeaders":
-          return deps.formatHeaders(entry.responseHeaders);
+          return deps.formatHeaders(entry.responseHeaders, options);
         case "timing":
           return formatTiming(entry);
         case "wsOverview":
@@ -169,7 +169,7 @@ export function createController(deps) {
       const frame = getSelectedFrame(entry);
 
       if (!frame) {
-        return "No message selected";
+        return options?.forCopy ? "" : "No message selected";
       }
 
       if (options?.forCopy) {

@@ -128,16 +128,16 @@ import {
     if (entry.kind === "http") {
       switch (key) {
         case "query":
-          value = formatQuery(entry.url, entry.queryString);
+          value = formatQuery(entry.url, entry.queryString, options);
           break;
         case "requestHeaders":
-          value = formatHeaders(entry.requestHeaders);
+          value = formatHeaders(entry.requestHeaders, options);
           break;
         case "requestBody":
           value = formatRequestBody(entry.requestPostData, options);
           break;
         case "responseHeaders":
-          value = formatHeaders(entry.responseHeaders);
+          value = formatHeaders(entry.responseHeaders, options);
           break;
         case "responseBody":
           value = formatResponseBody(entry, options);
@@ -167,7 +167,7 @@ import {
 
   function formatRequestBody(postData, options) {
     if (!postData) {
-      return "No request body";
+      return options?.forCopy ? "" : "No request body";
     }
 
     if (Array.isArray(postData.params) && postData.params.length > 0) {
@@ -181,7 +181,7 @@ import {
     }
 
     if (!postData.text) {
-      return "No request body";
+      return options?.forCopy ? "" : "No request body";
     }
 
     return formatPayload(postData.text, postData.mimeType, { ...options, t });
@@ -189,22 +189,26 @@ import {
 
   function formatResponseBody(entry, options) {
     if (entry.responseLoadState === "idle") {
-      return t("responseContentNotLoaded");
+      return options?.forCopy ? "" : t("responseContentNotLoaded");
     }
 
     if (entry.responseLoadState === "loading") {
-      return "Loading response content...";
+      return options?.forCopy ? "" : "Loading response content...";
     }
 
     if (entry.responseLoadState === "unavailable") {
-      return t("responseContentUnavailable");
+      return options?.forCopy ? "" : t("responseContentUnavailable");
     }
 
     if (!entry.responseContent) {
-      return "No response body";
+      return options?.forCopy ? "" : "No response body";
     }
 
     if (entry.responseEncoding === "base64") {
+      if (options?.forCopy) {
+        return entry.responseContent;
+      }
+
       return [
         t("responseBase64Title"),
         t("responseBase64Description"),
