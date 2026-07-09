@@ -1,3 +1,5 @@
+import { getLeadingContent, normalizePreviewText } from "./formatters.js";
+
 const MAX_WEBSOCKET_FRAMES = 500;
 const WEBSOCKET_MESSAGES_FILTER_RENDER_DELAY = 60;
 const DEBUGGER_PROTOCOL_VERSION = "1.3";
@@ -552,7 +554,7 @@ export function createController(deps) {
         return frame.payloadData || `${frame.type} frame`;
       }
 
-      const singleLine = String(frame.payloadData || "").replace(/\s+/g, " ").trim();
+      const singleLine = normalizePreviewText(frame.payloadData);
       return singleLine || "Empty payload";
     }
 
@@ -1056,7 +1058,9 @@ export function createController(deps) {
         return "pong";
       }
 
-      if (String(payloadData || "").trim().startsWith("{") || String(payloadData || "").trim().startsWith("[")) {
+      const leadingContent = getLeadingContent(payloadData);
+
+      if (leadingContent.startsWith("{") || leadingContent.startsWith("[")) {
         return "json";
       }
 

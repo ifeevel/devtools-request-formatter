@@ -42,12 +42,12 @@ export function formatHeaders(headers) {
 
 export function formatPayload(text, mimeType, options) {
   const rawSource = String(text ?? "");
-  const source = options?.preserveWhitespace ? rawSource : rawSource.trim();
-  const detectionSource = source.trim();
+  const source = rawSource;
+  const detectionSource = rawSource.trim();
   const type = String(mimeType || "").toLowerCase();
   const previewMode = !options?.forCopy;
 
-  if (!source) {
+  if (!rawSource) {
     return "Empty body";
   }
 
@@ -71,17 +71,26 @@ export function formatPayload(text, mimeType, options) {
   }
 
   if (looksLikeJson(type, detectionSource)) {
-    const formattedJson = tryFormatJson(source);
+    const formattedJson = tryFormatJson(detectionSource);
     if (formattedJson) {
       return formattedJson;
     }
   }
 
   if (type.includes("application/x-www-form-urlencoded")) {
-    return formatUrlEncoded(source);
+    return formatUrlEncoded(detectionSource);
   }
 
   return source;
+}
+
+export function getLeadingContent(value) {
+  return String(value || "").replace(/^\s+/, "");
+}
+
+export function normalizePreviewText(value) {
+  const normalized = String(value || "").replace(/\s+/g, " ");
+  return normalized.replace(/^ /, "").replace(/ $/, "");
 }
 
 function translateOption(options, key, substitutions, fallback) {
