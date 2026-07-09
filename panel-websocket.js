@@ -1,4 +1,20 @@
-import { getLeadingContent, normalizePreviewText } from "./formatters.js";
+import {
+  escapeHtml,
+  formatDuration,
+  formatHeaders,
+  formatPayload,
+  formatQuery,
+  formatTimestamp,
+  getHeaderValue,
+  getLeadingContent,
+  getTextByteLength,
+  headerPairsFromObject,
+  initializeTimeOrigin,
+  normalizePreviewText,
+  parseQueryString,
+  resolveEventTimeMs,
+  shortenUrl
+} from "./formatters.js";
 
 const MAX_WEBSOCKET_FRAMES = 500;
 const WEBSOCKET_MESSAGES_FILTER_RENDER_DELAY = 60;
@@ -52,11 +68,8 @@ export function createController(deps) {
       getActiveTab,
       refreshEntry,
       resetFormattedCache,
-      formatPayload,
-      formatTimestamp,
-      escapeHtml,
-      shortenUrl,
       setCaptureStatus,
+      updateDetailMeta,
       detailRenderer
     } = deps;
 
@@ -107,11 +120,11 @@ export function createController(deps) {
     function getFormattedValue(entry, key, options) {
       switch (key) {
         case "query":
-          return deps.formatQuery(entry.url, entry.queryString, options);
+          return formatQuery(entry.url, entry.queryString, options);
         case "requestHeaders":
-          return deps.formatHeaders(entry.requestHeaders, options);
+          return formatHeaders(entry.requestHeaders, options);
         case "responseHeaders":
-          return deps.formatHeaders(entry.responseHeaders, options);
+          return formatHeaders(entry.responseHeaders, options);
         case "timing":
           return formatTiming(entry);
         case "wsOverview":
@@ -451,7 +464,7 @@ export function createController(deps) {
       }
 
       detailRenderer.renderSection(function renderScheduledMessages() {
-        deps.updateDetailMeta(entry);
+        updateDetailMeta(entry);
         renderMessages(entry);
       });
     }
@@ -596,7 +609,7 @@ export function createController(deps) {
     }
 
     function formatEntryDuration(entry) {
-      return deps.formatDuration(getDuration(entry), "Connection time");
+      return formatDuration(getDuration(entry), "Connection time");
     }
 
     function getDuration(entry) {
@@ -988,54 +1001,6 @@ export function createController(deps) {
       return entry;
     }
 
-    function parseQueryString(url) {
-      try {
-        const parsedUrl = new URL(url);
-        const pairs = [];
-
-        parsedUrl.searchParams.forEach(function pushSearchParam(value, key) {
-          pairs.push({ name: key, value });
-        });
-        return pairs;
-      } catch (error) {
-        return [];
-      }
-    }
-
-    function headerPairsFromObject(headers) {
-      if (!headers || typeof headers !== "object") {
-        return [];
-      }
-
-      return Object.keys(headers).map(function toHeaderPair(name) {
-        return {
-          name,
-          value: normalizeHeaderValue(headers[name])
-        };
-      });
-    }
-
-    function getHeaderValue(headers, headerName) {
-      const target = String(headerName || "").toLowerCase();
-      const found = (headers || []).find(function findHeader(header) {
-        return String(header.name || "").toLowerCase() === target;
-      });
-
-      return found?.value || "";
-    }
-
-    function normalizeHeaderValue(value) {
-      if (Array.isArray(value)) {
-        return value.join(", ");
-      }
-
-      if (value === null || value === undefined) {
-        return "";
-      }
-
-      return String(value);
-    }
-
     function createFrame(entry, direction, response, timestamp) {
       const payloadData = String(response?.payloadData || "");
       const opcode = typeof response?.opcode === "number" ? response.opcode : -1;
@@ -1078,49 +1043,6 @@ export function createController(deps) {
       }
 
       return "text";
-    }
-
-    function getTextByteLength(value) {
-      try {
-        return new TextEncoder().encode(String(value || "")).length;
-      } catch (error) {
-        return String(value || "").length;
-      }
-    }
-
-    function initializeTimeOrigin(entry, timestamp, wallTime) {
-      if (
-        typeof timestamp === "number" &&
-        Number.isFinite(timestamp) &&
-        entry.websocket.timeOriginTimestamp === null
-      ) {
-        entry.websocket.timeOriginTimestamp = timestamp;
-      }
-
-      if (
-        typeof wallTime === "number" &&
-        Number.isFinite(wallTime) &&
-        entry.websocket.timeOriginWallTimeMs === null
-      ) {
-        entry.websocket.timeOriginWallTimeMs = wallTime * 1000;
-      }
-    }
-
-    function resolveEventTimeMs(entry, timestamp, wallTime) {
-      if (typeof wallTime === "number" && Number.isFinite(wallTime)) {
-        return wallTime * 1000;
-      }
-
-      if (
-        typeof timestamp === "number" &&
-        Number.isFinite(timestamp) &&
-        typeof entry.websocket?.timeOriginTimestamp === "number" &&
-        typeof entry.websocket?.timeOriginWallTimeMs === "number"
-      ) {
-        return entry.websocket.timeOriginWallTimeMs + (timestamp - entry.websocket.timeOriginTimestamp) * 1000;
-      }
-
-      return null;
     }
 
     function attachDebugger(debuggee) {
