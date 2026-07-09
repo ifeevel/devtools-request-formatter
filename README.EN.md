@@ -23,6 +23,7 @@ Zero-build Chrome DevTools extension for formatting HTTP requests, responses, an
 - Automatically pretty-prints `JSON` and `application/x-www-form-urlencoded` data
 - Supports viewing `WebSocket` handshake details, connection status, message list, and message details
 - Automatically formats `JSON` messages in `WebSocket` text frames
+- Supports searching within the right-side detail view and highlighting matches
 - Automatically follows the DevTools theme, with fallback to the system theme when the DevTools theme API is unavailable
 - Supports filtering requests, pausing capture, clearing the list, and copying formatted output
 
@@ -37,6 +38,7 @@ devtools-request-formatter/
 │   └── package.sh
 ├── devtools.html
 ├── devtools.js
+├── detail-search.js
 ├── formatters.js
 ├── i18n.js
 ├── manifest.json
@@ -67,6 +69,7 @@ The project keeps a zero-build structure, and the extension runtime entry files 
 3. Refresh the page or trigger API requests
 4. Select a request in the left-side list and view the formatted details on the right
 5. Enable the `WebSocket` toggle when you need to capture WebSocket frames
+6. Press `Ctrl+F` / `Cmd+F` in the detail view to open search, then use `Enter` or the arrow buttons to move between matches
 
 ## Permissions and Data Boundaries
 
