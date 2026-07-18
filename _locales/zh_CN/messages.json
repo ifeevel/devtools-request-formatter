@@ -29,6 +29,9 @@
   "copyButton": {
     "message": "复制"
   },
+  "copyFieldHint": {
+    "message": "点击复制"
+  },
   "copyCurrentMessageButton": {
     "message": "复制当前消息"
   },
