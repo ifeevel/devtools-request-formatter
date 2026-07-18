@@ -760,19 +760,20 @@ import {
 
     copyText(getFormattedValue(selected, key, { forCopy: true }))
       .then(function showCopied() {
-        const originalText = button.textContent;
-        button.textContent = t("copiedButton");
-        window.setTimeout(function restoreText() {
-          button.textContent = originalText;
-        }, 900);
+        showCopyButtonState(button, t("copiedButton"));
       })
       .catch(function showCopyFailed() {
-        const originalText = button.textContent;
-        button.textContent = t("copyFailedButton");
-        window.setTimeout(function restoreText() {
-          button.textContent = originalText;
-        }, 900);
+        showCopyButtonState(button, t("copyFailedButton"));
       });
+  }
+
+  function showCopyButtonState(button, message) {
+    const originalText = button.textContent;
+
+    button.textContent = message;
+    window.setTimeout(function restoreText() {
+      button.textContent = originalText;
+    }, 900);
   }
 
   function copyText(text) {
