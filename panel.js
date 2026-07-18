@@ -7,6 +7,11 @@ import {
   objectFromPairs,
   shortenUrl
 } from "./formatters.js";
+import {
+  createCopyHintController,
+  getHttpCopyFieldItems,
+  renderCopyableFieldObject
+} from "./copyable-detail.js";
 import { createController as createDetailSearchController } from "./detail-search.js";
 import { applyStaticI18n, t } from "./i18n.js";
 import {
@@ -72,6 +77,13 @@ import {
     onQueryChange: renderDetailBody
   });
   const detailRenderer = createDetailRenderer(detailSearchController);
+  const copyHintController = createCopyHintController({
+    container: dom.detailView,
+    documentValue: document,
+    windowValue: window,
+    t,
+    copyText
+  });
 
   const websocketController = createWebSocketController({
     state,
@@ -97,6 +109,19 @@ import {
       },
       renderText(node, value) {
         searchController.renderPre(node, value);
+      },
+      renderCopyableFields(node, items, formattedText) {
+        if (items.length === 0) {
+          searchController.renderPre(node, formattedText);
+          return;
+        }
+
+        if (searchController.isActive()) {
+          searchController.renderPre(node, formattedText);
+          return;
+        }
+
+        renderCopyableFieldObject(node, items);
       }
     };
   }
@@ -459,10 +484,22 @@ import {
       if (activeTab === "all") {
         ensureResponseContentLoaded(entry);
         detailRenderer.renderSection(function renderAllTab() {
-          detailRenderer.renderText(dom.allQueryOutput, getFormattedValue(entry, "query"));
-          detailRenderer.renderText(dom.allRequestHeadersOutput, getFormattedValue(entry, "requestHeaders"));
+          detailRenderer.renderCopyableFields(
+            dom.allQueryOutput,
+            getHttpCopyFieldItems(entry, "query"),
+            getFormattedValue(entry, "query")
+          );
+          detailRenderer.renderCopyableFields(
+            dom.allRequestHeadersOutput,
+            getHttpCopyFieldItems(entry, "requestHeaders"),
+            getFormattedValue(entry, "requestHeaders")
+          );
           detailRenderer.renderText(dom.allRequestBodyOutput, getFormattedValue(entry, "requestBody"));
-          detailRenderer.renderText(dom.allResponseHeadersOutput, getFormattedValue(entry, "responseHeaders"));
+          detailRenderer.renderCopyableFields(
+            dom.allResponseHeadersOutput,
+            getHttpCopyFieldItems(entry, "responseHeaders"),
+            getFormattedValue(entry, "responseHeaders")
+          );
           detailRenderer.renderText(dom.allResponseBodyOutput, getFormattedValue(entry, "responseBody"));
           detailRenderer.renderText(dom.allTimingOutput, getFormattedValue(entry, "timing"));
         });
@@ -471,14 +508,22 @@ import {
 
       if (activeTab === "query") {
         detailRenderer.renderSection(function renderQueryTab() {
-          detailRenderer.renderText(dom.queryOutput, getFormattedValue(entry, "query"));
+          detailRenderer.renderCopyableFields(
+            dom.queryOutput,
+            getHttpCopyFieldItems(entry, "query"),
+            getFormattedValue(entry, "query")
+          );
         });
         return;
       }
 
       if (activeTab === "request") {
         detailRenderer.renderSection(function renderRequestTab() {
-          detailRenderer.renderText(dom.requestHeadersOutput, getFormattedValue(entry, "requestHeaders"));
+          detailRenderer.renderCopyableFields(
+            dom.requestHeadersOutput,
+            getHttpCopyFieldItems(entry, "requestHeaders"),
+            getFormattedValue(entry, "requestHeaders")
+          );
           detailRenderer.renderText(dom.requestBodyOutput, getFormattedValue(entry, "requestBody"));
         });
         return;
@@ -487,7 +532,11 @@ import {
       if (activeTab === "response") {
         ensureResponseContentLoaded(entry);
         detailRenderer.renderSection(function renderResponseTab() {
-          detailRenderer.renderText(dom.responseHeadersOutput, getFormattedValue(entry, "responseHeaders"));
+          detailRenderer.renderCopyableFields(
+            dom.responseHeadersOutput,
+            getHttpCopyFieldItems(entry, "responseHeaders"),
+            getFormattedValue(entry, "responseHeaders")
+          );
           detailRenderer.renderText(dom.responseBodyOutput, getFormattedValue(entry, "responseBody"));
         });
         return;
@@ -703,6 +752,7 @@ import {
     });
 
     dom.clearButton.addEventListener("click", function clearEntries() {
+      copyHintController.hide();
       websocketController.clearState();
       state.entries.forEach(cleanupEntry);
       state.entries = [];
@@ -727,6 +777,7 @@ import {
 
       state.selectedId = item.dataset.id;
       updateActiveListItem(state.selectedId, previousSelectedId);
+      copyHintController.hide();
       renderDetail();
       dom.detailContainer?.scrollTo({ top: 0, behavior: "auto" });
     });
@@ -738,6 +789,7 @@ import {
         }
 
         state.activeTabs[tabButton.dataset.kind] = tabButton.dataset.tab;
+        copyHintController.hide();
         renderDetail();
       });
     });
@@ -747,6 +799,7 @@ import {
         copyFormattedValue(copyButton);
       });
     });
+    copyHintController.bindEvents();
     websocketController.bindUiEvents();
   }
 
@@ -760,19 +813,20 @@ import {
 
     copyText(getFormattedValue(selected, key, { forCopy: true }))
       .then(function showCopied() {
-        const originalText = button.textContent;
-        button.textContent = t("copiedButton");
-        window.setTimeout(function restoreText() {
-          button.textContent = originalText;
-        }, 900);
+        showCopyButtonState(button, t("copiedButton"));
       })
       .catch(function showCopyFailed() {
-        const originalText = button.textContent;
-        button.textContent = t("copyFailedButton");
-        window.setTimeout(function restoreText() {
-          button.textContent = originalText;
-        }, 900);
+        showCopyButtonState(button, t("copyFailedButton"));
       });
+  }
+
+  function showCopyButtonState(button, message) {
+    const originalText = button.textContent;
+
+    button.textContent = message;
+    window.setTimeout(function restoreText() {
+      button.textContent = originalText;
+    }, 900);
   }
 
   function copyText(text) {

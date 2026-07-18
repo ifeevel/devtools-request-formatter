@@ -29,6 +29,9 @@
   "copyButton": {
     "message": "Copy"
   },
+  "copyFieldHint": {
+    "message": "Click to copy"
+  },
   "copyCurrentMessageButton": {
     "message": "Copy current message"
   },

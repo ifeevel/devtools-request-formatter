@@ -31,6 +31,10 @@ const FALLBACK_MESSAGES = {
     en: "Copy",
     zh_CN: "复制"
   },
+  copyFieldHint: {
+    en: "Click to copy",
+    zh_CN: "点击复制"
+  },
   copyCurrentMessageButton: {
     en: "Copy current message",
     zh_CN: "复制当前消息"

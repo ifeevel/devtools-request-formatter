@@ -459,6 +459,33 @@ pre {
   font-size: 0.75rem;
 }
 
+.request-formatter-copy-token {
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.request-formatter-copy-token:hover {
+  color: var(--rf-accent);
+  background: var(--rf-accent-soft);
+}
+
+.request-formatter-copy-tooltip {
+  position: fixed;
+  z-index: 30;
+  max-width: min(18rem, calc(100vw - 2rem));
+  padding: 0.35rem 0.55rem;
+  border: 0.0625rem solid var(--rf-border);
+  border-radius: 0.55rem;
+  color: var(--rf-text);
+  background: var(--rf-surface);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
 .request-formatter-message-toolbar {
   display: grid;
   gap: 0.65rem;

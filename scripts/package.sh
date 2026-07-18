@@ -17,6 +17,7 @@ FILES=(
   manifest.json
   devtools.html
   devtools.js
+  copyable-detail.js
   detail-search.js
   formatters.js
   i18n.js
