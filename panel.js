@@ -437,6 +437,7 @@ import {
 
   function updateDetailMeta(entry) {
     dom.detailStatus.textContent = formatEntryStatus(entry);
+    dom.detailStatus.classList.toggle("is-error", hasErrorStatus(entry));
     dom.detailType.textContent = formatEntryType(entry);
     dom.detailDuration.textContent = formatEntryDuration(entry);
   }
@@ -565,6 +566,10 @@ import {
     return `${entry.status} ${entry.statusText || ""}`.trim();
   }
 
+  function hasErrorStatus(entry) {
+    return entry.kind !== "websocket" && Number(entry.status) >= 400;
+  }
+
   function formatEntryType(entry) {
     if (entry.kind === "websocket") {
       return websocketController.formatEntryType(entry);
@@ -617,6 +622,10 @@ import {
       item.classList.add("is-active");
     }
 
+    if (hasErrorStatus(entry)) {
+      item.classList.add("has-error-status");
+    }
+
     if (entry.kind === "websocket") {
       item.innerHTML = websocketController.createListItemContent(entry);
 
@@ -629,7 +638,7 @@ import {
       `<span class="request-formatter-item-url">${escapeHtml(shortenUrl(entry.url))}</span>`,
       "</div>",
       '<div class="request-formatter-item-sub">',
-      `<span>${escapeHtml(formatEntryStatus(entry))}</span>`,
+      `<span class="request-formatter-item-status">${escapeHtml(formatEntryStatus(entry))}</span>`,
       `<span>${escapeHtml(formatEntryDuration(entry))}</span>`,
       "</div>"
     ].join("");
