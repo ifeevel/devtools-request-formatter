@@ -8,7 +8,7 @@
   --rf-border: rgba(15, 23, 42, 0.12);
   --rf-accent: #007aff;
   --rf-accent-soft: rgba(0, 122, 255, 0.1);
-  --rf-danger: #c2410c;
+  --rf-danger: #DC362E;
   --rf-search: #facc15;
   --rf-search-active: #fb923c;
   --rf-websocket-accent: #0f766e;
@@ -28,7 +28,7 @@
   --rf-border: rgba(255, 255, 255, 0.1);
   --rf-accent: #007aff;
   --rf-accent-soft: rgba(0, 122, 255, 0.16);
-  --rf-danger: #fb923c;
+  --rf-danger: #E46962;
   --rf-search: #a16207;
   --rf-search-active: #ea580c;
   --rf-websocket-accent: #5eead4;
@@ -239,6 +239,15 @@ pre {
   white-space: nowrap;
 }
 
+.request-formatter-item-status {
+  color: inherit;
+}
+
+.request-formatter-item.has-error-status .request-formatter-item-url,
+.request-formatter-item.has-error-status .request-formatter-item-status {
+  color: var(--rf-danger);
+}
+
 .request-formatter-item-sub {
   display: grid;
   grid-template-columns: var(--rf-item-method-width) minmax(0, 1fr);
@@ -338,6 +347,10 @@ pre {
   background: var(--rf-surface-muted);
   color: var(--rf-text-muted);
   font-size: 0.6875rem;
+}
+
+.request-formatter-meta #detail-status.is-error {
+  color: var(--rf-danger);
 }
 
 .request-formatter-tabs {
