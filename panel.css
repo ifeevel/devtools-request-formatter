@@ -446,8 +446,8 @@ pre {
 
 .request-formatter-card {
   display: grid;
-  gap: 0.65rem;
-  padding: 1rem;
+  gap: 0.55rem;
+  padding: 0.8rem;
   border: 0.0625rem solid var(--rf-border);
   border-radius: 1rem;
   background: var(--rf-surface);
@@ -463,7 +463,7 @@ pre {
 
 .request-formatter-card-title h3 {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 }
 
 .request-formatter-card-title button {
