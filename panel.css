@@ -319,6 +319,9 @@ pre {
 }
 
 .request-formatter-detail-header h2 {
+  min-width: 0;
+  max-height: min(5.5rem, 20vh);
+  overflow: auto;
   overflow-wrap: anywhere;
   margin: 0;
   font-size: 0.95rem;
