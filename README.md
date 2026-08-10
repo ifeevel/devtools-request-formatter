@@ -36,6 +36,7 @@ devtools-request-formatter/
 ├── _locales/
 ├── assets/
 ├── scripts/
+│   ├── check.sh
 │   └── package.sh
 ├── src/
 │   ├── copyable-detail.js
@@ -74,6 +75,14 @@ devtools-request-formatter/
 4. 在左侧列表选择请求，在右侧查看格式化后的详情
 5. 需要采集 WebSocket 帧时，启用 `WebSocket` 开关
 6. 在详情区按 `Ctrl+F` / `Cmd+F` 可打开搜索框，使用 `Enter` 或方向按钮切换匹配结果
+
+## 本地检查
+
+```bash
+bash scripts/check.sh
+```
+
+脚本会检查 `src/` 下所有 JavaScript 文件，以及根目录的 `devtools.js`。
 
 ## 权限和数据边界
 

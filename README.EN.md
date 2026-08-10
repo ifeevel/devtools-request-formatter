@@ -36,6 +36,7 @@ devtools-request-formatter/
 ├── _locales/
 ├── assets/
 ├── scripts/
+│   ├── check.sh
 │   └── package.sh
 ├── src/
 │   ├── copyable-detail.js
@@ -74,6 +75,14 @@ The project keeps a zero-build structure. Extension entry files live at the repo
 4. Select a request in the left-side list and view the formatted details on the right
 5. Enable the `WebSocket` toggle when you need to capture WebSocket frames
 6. Press `Ctrl+F` / `Cmd+F` in the detail view to open search, then use `Enter` or the arrow buttons to move between matches
+
+## Local Checks
+
+```bash
+bash scripts/check.sh
+```
+
+The script checks all JavaScript files under `src/`, plus the root `devtools.js`.
 
 ## Permissions and Data Boundaries
 

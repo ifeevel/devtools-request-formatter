@@ -23,6 +23,7 @@ The extension is intentionally small and dependency-free. Extension entry files 
 - `src/i18n.js`: centralized runtime text lookup and fallback messages.
 - `src/theme.js`: DevTools/system theme synchronization.
 - `_locales/`: Chrome extension locale message files.
+- `scripts/check.sh`: syntax-only JavaScript validation.
 - `scripts/package.sh`: local release zip packaging.
 
 ## Coding Rules
@@ -74,6 +75,7 @@ There is no build step and no automated test suite in this repository.
 Before finishing a change, run the checks that fit the edit:
 
 ```bash
+bash scripts/check.sh
 bash scripts/package.sh
 ```
 
@@ -89,15 +91,7 @@ Manual smoke test for UI changes:
 For syntax-only JavaScript validation, use:
 
 ```bash
-node --check src/panel.js
-node --check src/panel-websocket.js
-node --check src/curl.js
-node --check src/formatters.js
-node --check src/copyable-detail.js
-node --check src/detail-search.js
-node --check src/i18n.js
-node --check src/theme.js
-node --check devtools.js
+bash scripts/check.sh
 ```
 
 ## Packaging
