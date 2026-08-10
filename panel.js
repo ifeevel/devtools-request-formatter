@@ -12,6 +12,7 @@ import {
   getHttpCopyFieldItems,
   renderCopyableFieldObject
 } from "./copyable-detail.js";
+import { formatCurlCommand } from "./curl.js";
 import { createController as createDetailSearchController } from "./detail-search.js";
 import { applyStaticI18n, t } from "./i18n.js";
 import {
@@ -48,6 +49,7 @@ import {
     captureStatus: document.getElementById("capture-status"),
     captureToggle: document.getElementById("capture-toggle"),
     clearButton: document.getElementById("clear-button"),
+    curlOutput: document.getElementById("curl-output"),
     detailContainer: document.querySelector(".request-formatter-detail"),
     detailDuration: document.getElementById("detail-duration"),
     detailMethod: document.getElementById("detail-method"),
@@ -185,6 +187,9 @@ import {
           break;
         case "timing":
           value = formatHttpTiming(entry);
+          break;
+        case "curl":
+          value = formatCurlCommand(entry);
           break;
         default:
           value = "";
@@ -546,6 +551,13 @@ import {
       if (activeTab === "timing") {
         detailRenderer.renderSection(function renderTimingTab() {
           detailRenderer.renderText(dom.timingOutput, getFormattedValue(entry, "timing"));
+        });
+        return;
+      }
+
+      if (activeTab === "curl") {
+        detailRenderer.renderSection(function renderCurlTab() {
+          detailRenderer.renderText(dom.curlOutput, getFormattedValue(entry, "curl"));
         });
         return;
       }

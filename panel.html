@@ -100,6 +100,7 @@
               <button type="button" data-kind="http" data-tab="request">Request</button>
               <button type="button" data-kind="http" data-tab="response">Response</button>
               <button type="button" data-kind="http" data-tab="timing">Timing</button>
+              <button type="button" data-kind="http" data-tab="curl">cURL</button>
               <button type="button" data-kind="websocket" data-tab="overview" hidden>Overview</button>
               <button type="button" data-kind="websocket" data-tab="handshake" hidden>Handshake</button>
               <button type="button" data-kind="websocket" data-tab="messages" hidden>Messages</button>
@@ -203,6 +204,16 @@
                 <button type="button" data-copy="timing" data-i18n="copyButton">Copy</button>
               </div>
               <pre id="timing-output"></pre>
+            </section>
+          </div>
+
+          <div class="request-formatter-tab-panel" data-kind="http" data-panel="curl">
+            <section class="request-formatter-card">
+              <div class="request-formatter-card-title">
+                <h3>cURL</h3>
+                <button type="button" data-copy="curl" data-i18n="copyButton">Copy</button>
+              </div>
+              <pre id="curl-output"></pre>
             </section>
           </div>
 
