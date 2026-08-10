@@ -17,16 +17,8 @@ FILES=(
   manifest.json
   devtools.html
   devtools.js
-  copyable-detail.js
-  curl.js
-  detail-search.js
-  formatters.js
-  i18n.js
   panel.html
-  panel.js
-  panel-websocket.js
-  panel.css
-  theme.js
+  src
 )
 
 if [[ -d "$ROOT_DIR/assets/icons" ]]; then

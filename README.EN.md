@@ -37,24 +37,26 @@ devtools-request-formatter/
 ├── assets/
 ├── scripts/
 │   └── package.sh
-├── curl.js
+├── src/
+│   ├── copyable-detail.js
+│   ├── curl.js
+│   ├── detail-search.js
+│   ├── formatters.js
+│   ├── i18n.js
+│   ├── panel.css
+│   ├── panel.js
+│   ├── panel-websocket.js
+│   └── theme.js
 ├── devtools.html
 ├── devtools.js
-├── detail-search.js
-├── formatters.js
-├── i18n.js
 ├── manifest.json
-├── panel.css
 ├── panel.html
-├── panel.js
-├── panel-websocket.js
-├── theme.js
 ├── LICENSE
 ├── README.md
 └── README.EN.md
 ```
 
-The project keeps a zero-build structure, and the extension runtime entry files are located directly at the repository root.
+The project keeps a zero-build structure. Extension entry files live at the repository root, and panel runtime JS/CSS lives in `src/`.
 
 ## Local Installation
 

@@ -37,24 +37,26 @@ devtools-request-formatter/
 ├── assets/
 ├── scripts/
 │   └── package.sh
-├── curl.js
+├── src/
+│   ├── copyable-detail.js
+│   ├── curl.js
+│   ├── detail-search.js
+│   ├── formatters.js
+│   ├── i18n.js
+│   ├── panel.css
+│   ├── panel.js
+│   ├── panel-websocket.js
+│   └── theme.js
 ├── devtools.html
 ├── devtools.js
-├── detail-search.js
-├── formatters.js
-├── i18n.js
 ├── manifest.json
-├── panel.css
 ├── panel.html
-├── panel.js
-├── panel-websocket.js
-├── theme.js
 ├── LICENSE
 ├── README.md
 └── README.EN.md
 ```
 
-项目保持零构建结构，扩展运行入口文件直接位于仓库根目录。
+项目保持零构建结构，扩展入口文件位于仓库根目录，面板运行时 JS/CSS 位于 `src/`。
 
 ## 本地安装
 
