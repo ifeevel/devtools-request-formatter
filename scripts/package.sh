@@ -18,6 +18,7 @@ FILES=(
   devtools.html
   devtools.js
   copyable-detail.js
+  curl.js
   detail-search.js
   formatters.js
   i18n.js
