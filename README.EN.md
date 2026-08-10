@@ -21,6 +21,7 @@ Zero-build Chrome DevTools extension for formatting HTTP requests, responses, an
 - Displays request method, URL, status code, resource type, and duration
 - Formats `URL Params`, `Request Headers`, `Request Body`, `Response Headers`, and `Response Body`
 - Automatically pretty-prints `JSON` and `application/x-www-form-urlencoded` data
+- Supports displaying HTTP requests as reusable `cURL` commands
 - Supports viewing `WebSocket` handshake details, connection status, message list, and message details
 - Automatically formats `JSON` messages in `WebSocket` text frames
 - Supports searching within the right-side detail view and highlighting matches
@@ -36,6 +37,7 @@ devtools-request-formatter/
 ├── assets/
 ├── scripts/
 │   └── package.sh
+├── curl.js
 ├── devtools.html
 ├── devtools.js
 ├── detail-search.js

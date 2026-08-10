@@ -21,6 +21,7 @@
 - 展示请求方法、URL、状态码、资源类型和耗时
 - 格式化 `URL Params`、`Request Headers`、`Request Body`、`Response Headers`、`Response Body`
 - 自动美化 `JSON` 与 `application/x-www-form-urlencoded` 数据
+- 支持将 HTTP 请求展示为可复用的 `cURL` 命令
 - 支持查看 `WebSocket` 握手信息、连接状态、消息列表与消息详情
 - 自动格式化 `WebSocket` 文本帧中的 `JSON` 消息
 - 支持在右侧详情区搜索当前请求或连接内容，并高亮匹配结果
@@ -36,6 +37,7 @@ devtools-request-formatter/
 ├── assets/
 ├── scripts/
 │   └── package.sh
+├── curl.js
 ├── devtools.html
 ├── devtools.js
 ├── detail-search.js
