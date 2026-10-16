@@ -1,3 +1,5 @@
+import { tokenizeJsonToHtml } from "./formatters.js";
+
 export function createController(options) {
   const documentValue = options?.documentValue || globalThis.document;
   const windowValue = options?.windowValue || globalThis.window;
@@ -101,20 +103,17 @@ export function createController(options) {
     syncActiveMatch(true);
   }
 
-  function renderPre(container, value) {
-    if (!isActive()) {
-      container.textContent = String(value ?? "");
-      return {
-        matchCount: 0,
-        activeElement: null
-      };
-    }
-
+  function renderPre(container, value, renderOptions) {
     const result = renderHighlightedText(container, value, state.text, {
       activeIndex: state.activeIndex,
       globalStartIndex: state.renderCursor,
-      documentValue
+      documentValue,
+      highlightJson: renderOptions?.highlightJson
     });
+
+    if (!isActive()) {
+      return result;
+    }
 
     state.renderCursor += result.matchCount;
     state.matchCount = state.renderCursor;
@@ -279,39 +278,72 @@ export function renderHighlightedText(container, text, query, options) {
   const activeIndex = Number(options?.activeIndex) || 0;
   const globalStartIndex = Number(options?.globalStartIndex) || 0;
   const documentValue = options?.documentValue || container.ownerDocument;
+  const html = options?.highlightJson ? tokenizeJsonToHtml(source) : null;
+
+  if (html === null) {
+    container.textContent = source;
+  } else {
+    container.innerHTML = html;
+  }
 
   if (!query || matches.length === 0) {
-    container.textContent = source;
     return {
       matchCount: matches.length,
       activeElement: null
     };
   }
 
-  const fragment = documentValue.createDocumentFragment();
+  const walker = documentValue.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  const textNodes = [];
   let cursor = 0;
   let activeElement = null;
+  let node;
 
-  matches.forEach(function appendMatch(match, index) {
-    const globalIndex = globalStartIndex + index;
+  while ((node = walker.nextNode())) {
+    textNodes.push({ node, start: cursor, end: cursor + node.length });
+    cursor += node.length;
+  }
 
-    fragment.append(documentValue.createTextNode(source.slice(cursor, match.start)));
+  let nodeIndex = 0;
+  const boundaries = matches.map(function locateMatch(match) {
+    while (textNodes[nodeIndex].end <= match.start) {
+      nodeIndex += 1;
+    }
+
+    const start = textNodes[nodeIndex];
+
+    while (textNodes[nodeIndex].end < match.end) {
+      nodeIndex += 1;
+    }
+
+    const end = textNodes[nodeIndex];
+    return {
+      startNode: start.node,
+      startOffset: match.start - start.start,
+      endNode: end.node,
+      endOffset: match.end - end.start
+    };
+  });
+
+  // Work backwards so wrapping later matches preserves earlier text offsets.
+  // Extracting contents keeps token spans even when a match crosses tokens.
+  const range = documentValue.createRange();
+  for (let index = boundaries.length - 1; index >= 0; index -= 1) {
+    const boundary = boundaries[index];
+    range.setStart(boundary.startNode, boundary.startOffset);
+    range.setEnd(boundary.endNode, boundary.endOffset);
 
     const mark = documentValue.createElement("mark");
     mark.className = "request-formatter-search-match";
-    mark.textContent = source.slice(match.start, match.end);
+    mark.append(range.extractContents());
 
-    if (globalIndex === activeIndex) {
+    if (globalStartIndex + index === activeIndex) {
       mark.classList.add("is-active-search-match");
       activeElement = mark;
     }
 
-    fragment.append(mark);
-    cursor = match.end;
-  });
-
-  fragment.append(documentValue.createTextNode(source.slice(cursor)));
-  container.replaceChildren(fragment);
+    range.insertNode(mark);
+  }
 
   return {
     matchCount: matches.length,

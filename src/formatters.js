@@ -51,6 +51,10 @@ export function formatPayload(text, mimeType, options) {
     return options?.forCopy ? "" : "Empty body";
   }
 
+  if (options?.forCopy) {
+    return rawSource;
+  }
+
   if (previewMode && source.length > LARGE_PAYLOAD_CHAR_LIMIT) {
     return [
       translateOption(
@@ -71,7 +75,7 @@ export function formatPayload(text, mimeType, options) {
   }
 
   if (looksLikeJson(type, detectionSource)) {
-    const formattedJson = tryFormatJson(detectionSource);
+    const formattedJson = formatJsonPretty(rawSource);
     if (formattedJson) {
       return formattedJson;
     }
@@ -82,6 +86,47 @@ export function formatPayload(text, mimeType, options) {
   }
 
   return source;
+}
+
+// Return null for textContent fallback; escape JSON before adding fixed markup.
+export function tokenizeJsonToHtml(prettyJson) {
+  const source = String(prettyJson ?? "");
+  const detectionSource = source.trim();
+
+  if (!detectionSource.startsWith("{") && !detectionSource.startsWith("[")) {
+    return null;
+  }
+
+  try {
+    JSON.parse(source);
+  } catch (error) {
+    return null;
+  }
+
+  const tokens = /"(?:\\[\s\S]|[^"\\])*"|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\b(?:true|false|null)\b/g;
+  let html = "";
+  let cursor = 0;
+
+  for (const match of source.matchAll(tokens)) {
+    const token = match[0];
+    let kind;
+
+    if (token.startsWith("\"")) {
+      kind = /^\s*:/.test(source.slice(match.index + token.length)) ? "key" : "string";
+    } else if (token === "null") {
+      kind = "null";
+    } else if (token === "true" || token === "false") {
+      kind = "boolean";
+    } else {
+      kind = "number";
+    }
+
+    html += escapeHtml(source.slice(cursor, match.index));
+    html += `<span class="rf-json-${kind}">${escapeHtml(token)}</span>`;
+    cursor = match.index + token.length;
+  }
+
+  return html + escapeHtml(source.slice(cursor));
 }
 
 export function getLeadingContent(value) {
@@ -237,7 +282,8 @@ function looksLikeJson(mimeType, source) {
   return mimeType.includes("json") || source.startsWith("{") || source.startsWith("[");
 }
 
-function tryFormatJson(source) {
+export function formatJsonPretty(text) {
+  const source = String(text ?? "");
   try {
     return JSON.stringify(JSON.parse(source), null, 2);
   } catch (error) {
