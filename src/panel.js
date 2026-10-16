@@ -110,7 +110,7 @@ import {
         searchController.finalizeRender();
       },
       renderText(node, value) {
-        searchController.renderPre(node, value);
+        searchController.renderPre(node, value, { highlightJson: true });
       },
       renderCopyableFields(node, items, formattedText) {
         if (items.length === 0) {
@@ -214,6 +214,10 @@ import {
   function formatRequestBody(postData, options) {
     if (!postData) {
       return options?.forCopy ? "" : "No request body";
+    }
+
+    if (options?.forCopy && typeof postData.text === "string") {
+      return postData.text;
     }
 
     if (Array.isArray(postData.params) && postData.params.length > 0) {

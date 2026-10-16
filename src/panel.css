@@ -8,6 +8,11 @@
   --rf-border: rgba(15, 23, 42, 0.12);
   --rf-accent: #007aff;
   --rf-accent-soft: rgba(0, 122, 255, 0.1);
+  --rf-key: #0451a5;
+  --rf-string: #a31515;
+  --rf-number: #08794e;
+  --rf-boolean: #0000ff;
+  --rf-null: #0000ff;
   --rf-danger: #DC362E;
   --rf-search: #facc15;
   --rf-search-active: #fb923c;
@@ -28,6 +33,11 @@
   --rf-border: rgba(255, 255, 255, 0.1);
   --rf-accent: #007aff;
   --rf-accent-soft: rgba(0, 122, 255, 0.16);
+  --rf-key: #9cdcfe;
+  --rf-string: #ce9178;
+  --rf-number: #b5cea8;
+  --rf-boolean: #569cd6;
+  --rf-null: #569cd6;
   --rf-danger: #E46962;
   --rf-search: #a16207;
   --rf-search-active: #ea580c;
@@ -100,6 +110,26 @@ pre {
   font-size: 0.75rem;
   line-height: 1.6;
   white-space: pre;
+}
+
+.rf-json-key {
+  color: var(--rf-key);
+}
+
+.rf-json-string {
+  color: var(--rf-string);
+}
+
+.rf-json-number {
+  color: var(--rf-number);
+}
+
+.rf-json-boolean {
+  color: var(--rf-boolean);
+}
+
+.rf-json-null {
+  color: var(--rf-null);
 }
 
 .request-formatter-shell {
@@ -433,7 +463,8 @@ pre {
   background: var(--rf-search);
 }
 
-.request-formatter-search-match.is-active-search-match {
+.request-formatter-search-match.is-active-search-match,
+.request-formatter-search-match.is-active-search-match span {
   color: #ffffff;
   background: var(--rf-search-active);
 }
